@@ -7,7 +7,7 @@
     "packages/cli"
   ],
   "scripts": {
-    "build": "tsc -b packages/core packages/cli",
+    "build": "tsc -b packages/core packages/cli && node scripts/bundle.mjs",
     "typecheck": "tsc -b packages/core packages/cli --noEmit",
     "test": "node --conditions=source --test 'packages/*/test/*.test.ts'",
     "check": "npm run build && npm test"
@@ -17,6 +17,8 @@
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "esbuild": "^0.28.2",
     "typescript": "^7.0.2"
-  }
+  },
+  "license": "MIT"
 }

@@ -4,7 +4,6 @@ Find out why users still see the old version after a deploy.
 
 Based on [We Deployed an Hour Ago. Why Do Users Still See the Old Version?](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/), which walks through the four places an old copy can live: the HTTP cache, the CDN, the open tab, and the service worker.
 
-> Status: the CLI and the agent skill work; neither is published yet.
 
 ## Usage
 
@@ -45,7 +44,18 @@ Options: `--json`, `--out <file>`, `--baseline <file>`, `--strict`, `--ignore <c
 
 ### What it can't see
 
-It checks what any HTTP client can see: the HTML's cache headers, whether asset names are hashed, and the CDN in front of the site. It can't see users' browser caches, their open tabs, or their service workers. The agent skill in [`skill/stale-deploy-check`](skill/stale-deploy-check/SKILL.md) runs the CLI, then checks the code that controls those: host header config, whether deploys delete old assets, recovery from failed dynamic imports, and the service worker update flow.
+It checks what any HTTP client can see: the HTML's cache headers, whether asset names are hashed, and the CDN in front of the site. It can't see users' browser caches, their open tabs, or their service workers. The agent skill in [`skill/stale-deploy-check`](https://github.com/ikhattab/stale-deploy-check/blob/main/skill/stale-deploy-check/SKILL.md) runs the CLI, then checks the code that controls those: host header config, whether deploys delete old assets, recovery from failed dynamic imports, and the service worker update flow.
+
+## Agent skill
+
+The skill runs the CLI, then reads your repo for what HTTP can't show. To use it with Claude Code, copy it into your skills folder:
+
+```sh
+git clone https://github.com/ikhattab/stale-deploy-check
+cp -R stale-deploy-check/skill/stale-deploy-check ~/.claude/skills/
+```
+
+Then ask something like "users still see the old version after we deploy, can you find out why?" in your project.
 
 ## Development
 
@@ -61,5 +71,9 @@ packages/cli    the stale-deploy-check command
 skill/          the agent skill; skill/evals has its test prompts and two example repos
 ```
 
-- [docs/findings.md](docs/findings.md): the finding and report format
-- [docs/checks.md](docs/checks.md): every check, what triggers it, and where the article explains it
+- [docs/findings.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/findings.md): the finding and report format
+- [docs/checks.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/checks.md): every check, what triggers it, and where the article explains it
+
+## License
+
+MIT

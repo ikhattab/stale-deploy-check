@@ -99,8 +99,8 @@ describe("output", () => {
   });
 });
 
-test("the built bin runs", async () => {
-  const bin = new URL("../dist/bin.js", import.meta.url).pathname;
+test("the bundled bin runs on its own", async () => {
+  const bin = new URL("../dist/stale-deploy-check.js", import.meta.url).pathname;
   const { stdout } = await promisify(execFile)(process.execPath, [bin, "--version"]);
   assert.match(stdout, /^\d+\.\d+\.\d+\n$/);
 });

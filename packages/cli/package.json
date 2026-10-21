@@ -2,12 +2,36 @@
   "name": "stale-deploy-check",
   "version": "0.1.0",
   "description": "Find out why users still see the old version after a deploy.",
+  "keywords": [
+    "cache",
+    "cache-control",
+    "cdn",
+    "deploy",
+    "service-worker",
+    "stale",
+    "http-headers",
+    "ci"
+  ],
+  "homepage": "https://github.com/ikhattab/stale-deploy-check#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ikhattab/stale-deploy-check.git",
+    "directory": "packages/cli"
+  },
+  "bugs": "https://github.com/ikhattab/stale-deploy-check/issues",
+  "license": "MIT",
+  "author": "Ihab Khattab",
   "type": "module",
   "bin": {
-    "stale-deploy-check": "./dist/bin.js"
+    "stale-deploy-check": "./dist/stale-deploy-check.js"
   },
-  "files": ["dist"],
-  "dependencies": {
+  "files": [
+    "dist/stale-deploy-check.js"
+  ],
+  "scripts": {
+    "prepack": "cp ../../README.md ../../LICENSE ."
+  },
+  "devDependencies": {
     "@stale-deploy-check/core": "0.1.0"
   },
   "engines": {
