@@ -1,0 +1,22 @@
+{
+  "name": "stale-deploy-check-workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "packages/cli"
+  ],
+  "scripts": {
+    "build": "tsc -b packages/core packages/cli",
+    "typecheck": "tsc -b packages/core packages/cli --noEmit",
+    "test": "node --conditions=source --test 'packages/*/test/*.test.ts'",
+    "check": "npm run build && npm test"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2"
+  }
+}

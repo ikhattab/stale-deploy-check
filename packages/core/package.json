@@ -1,0 +1,17 @@
+{
+  "name": "@stale-deploy-check/core",
+  "version": "0.1.0",
+  "description": "Checks why users still see the old version after a deploy. Uses only fetch, so it runs in Node, Workers, and browsers.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "dependencies": {
+    "htmlparser2": "^12.0.0"
+  }
+}

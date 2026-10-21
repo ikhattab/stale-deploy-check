@@ -1,0 +1,16 @@
+{
+  "name": "stale-deploy-check",
+  "version": "0.1.0",
+  "description": "Find out why users still see the old version after a deploy.",
+  "type": "module",
+  "bin": {
+    "stale-deploy-check": "./dist/bin.js"
+  },
+  "files": ["dist"],
+  "dependencies": {
+    "@stale-deploy-check/core": "0.1.0"
+  },
+  "engines": {
+    "node": ">=20.12"
+  }
+}

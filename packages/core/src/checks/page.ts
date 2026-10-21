@@ -1,0 +1,88 @@
+import { learn } from "../links.ts";
+import type { Finding } from "../types.ts";
+import { plural, status, type Context } from "./context.ts";
+
+export function pageChecks(ctx: Context): Finding[] {
+  const findings: Finding[] = [];
+  const { buildId, serviceWorker } = ctx.page;
+
+  if (buildId) {
+    findings.push({
+      check: "page.build-id",
+      layer: "diagnostics",
+      severity: "pass",
+      source: "headers",
+      title: `The page says which build it is: ${buildId.content}`,
+      detail: `Found <meta name="${buildId.name}">.`,
+      evidence: [{ kind: "computed", label: `meta ${buildId.name}`, value: buildId.content }],
+      learnMore: learn.proveIt,
+    });
+  } else {
+    findings.push({
+      check: "page.build-id",
+      layer: "diagnostics",
+      severity: "info",
+      source: "headers",
+      title: "The page doesn't say which build it is",
+      detail: 'Without a build id in the HTML, "users see the old version" has no number attached, and you can\'t tell which deploy a screenshot came from.',
+      evidence: [{ kind: "computed", label: "meta build/version", value: "not found" }],
+      fix: 'Add <meta name="build" content="..."> with the build id or commit, and show it somewhere a user can read it.',
+      learnMore: learn.proveIt,
+    });
+  }
+
+  if (serviceWorker) {
+    findings.push({
+      check: "page.service-worker",
+      layer: "service-worker",
+      severity: "info",
+      source: "headers",
+      title: "The page registers a service worker",
+      detail:
+        "A service worker can answer requests from its own cache before any of the HTTP headers above apply, and a new one waits until every tab using the old one is closed. " +
+        "This check can't see what it serves. Check its update flow in the code, or in DevTools under Application → Service workers.",
+      evidence: [{ kind: "computed", label: "detected by", value: serviceWorker }],
+      learnMore: learn.serviceWorker,
+    });
+  }
+
+  return findings;
+}
+
+export function baselineChecks(ctx: Context): Finding[] {
+  if (!ctx.baseline) return [];
+  const { checked } = ctx.baseline;
+  const base = { layer: "open-tab", source: "headers", learnMore: learn.openTab } as const;
+  const gone = checked.filter((r) => r.status === 404 || r.status === 410);
+  const kept = checked.filter((r) => !gone.includes(r));
+
+  if (gone.length > 0) {
+    return [
+      {
+        ...base,
+        check: "assets.previous-removed",
+        severity: "fail",
+        title: `${plural(gone.length, "file")} from the previous deploy ${gone.length === 1 ? "is" : "are"} gone`,
+        detail:
+          "Tabs opened before this deploy still run the old code, which loads these URLs on demand (a route, a lazy component). " +
+          "They now fail, and an unhandled failed import() usually means a blank screen.",
+        evidence: gone.map(status),
+        fix: "Keep old assets for a few days after a deploy instead of deleting them, and reload once when a dynamic import fails.",
+      },
+    ];
+  }
+
+  return [
+    {
+      ...base,
+      check: "assets.previous-kept",
+      severity: "pass",
+      title: checked.length === 0 ? "No asset URLs changed since the baseline" : "Files from the previous deploy still load",
+      detail:
+        checked.length === 0
+          ? "Every asset in the baseline report is still referenced by the HTML, so there was nothing to check."
+          : `${plural(kept.length, "file")} the old HTML referenced and this one doesn't still load, so tabs opened before the deploy keep working.`,
+      evidence: kept.map(status),
+    },
+  ];
+}

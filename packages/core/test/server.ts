@@ -1,0 +1,105 @@
+import { createServer, type IncomingMessage, type OutgoingHttpHeaders } from "node:http";
+import type { AddressInfo } from "node:net";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const YEAR = "public, max-age=31536000, immutable";
+
+type Route = (req: IncomingMessage) => { status?: number; headers?: OutgoingHttpHeaders; body?: string };
+
+const html = (body: string): string => `<!doctype html><html><head>${body}</head><body></body></html>`;
+const asset = (cacheControl?: string): Route => () => ({ headers: { "content-type": "text/javascript", ...(cacheControl ? { "cache-control": cacheControl } : {}) }, body: "//" });
+
+let dynamicCounter = 0;
+
+/** One scenario per path prefix, each built to trigger specific findings. */
+const routes: Record<string, Route> = {
+  // No Cache-Control, a 31-day-old Last-Modified, an unhashed long-cached script, a ?v= stylesheet, a third-party script.
+  "/bad/": () => ({
+    headers: { "content-type": "text/html; charset=utf-8", "last-modified": new Date(Date.now() - 31 * DAY_MS).toUTCString() },
+    body: html(`
+      <script src="/bad/app.js"></script>
+      <link rel="stylesheet" href="/bad/style.css?v=42">
+      <script src="https://third-party.example/widget.js"></script>`),
+  }),
+  "/bad/app.js": asset("public, max-age=604800"),
+  "/bad/style.css": asset("public, max-age=3600"),
+
+  // What the article recommends.
+  "/good/": (req) =>
+    req.headers["if-none-match"] === '"v1"'
+      ? { status: 304, headers: { etag: '"v1"', "cache-control": "no-cache" } }
+      : {
+          headers: { "content-type": "text/html", "cache-control": "no-cache", etag: '"v1"' },
+          body: html(`
+            <meta name="build" content="2026-10-22.1">
+            <script type="module" src="/good/assets/app.3f9a1c.js"></script>
+            <link rel="modulepreload" href="/good/assets/settings.a71f30.js">
+            <link rel="stylesheet" href="assets/index-BxKaQzWe.css">`),
+        },
+  "/good/assets/app.3f9a1c.js": asset(YEAR),
+  "/good/assets/settings.a71f30.js": asset(YEAR),
+  "/good/assets/index-BxKaQzWe.css": asset(YEAR),
+  "/good/assets/kept.222bbb.js": asset(YEAR),
+
+  // A Cloudflare zone cache holding HTML that says no-cache.
+  "/edge/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "no-cache", "cf-ray": "8d1f-FRA", "cf-cache-status": "HIT", age: "2412" },
+    body: html(""),
+  }),
+  // Like example.com: no Cache-Control, so the CDN guesses a lifetime from Last-Modified just as browsers do.
+  "/edge-heuristic/": () => ({
+    headers: { "content-type": "text/html", "last-modified": new Date(Date.now() - DAY_MS).toUTCString(), "cf-ray": "8d1f-MRS", "cf-cache-status": "HIT", age: "600" },
+    body: html(""),
+  }),
+  // A Worker's version-keyed cache: HIT without Age.
+  "/worker/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "public, max-age=0, must-revalidate", "cf-ray": "8d1f-ZRH", "cf-cache-status": "HIT", server: "cloudflare" },
+    body: html(""),
+  }),
+  // Long CDN lifetime on CloudFront, using a header CloudFront doesn't document.
+  "/cloudfront/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "max-age=0, s-maxage=3600", "cdn-cache-control": "max-age=3600", "x-amz-cf-id": "abc", "x-amz-cf-pop": "FRA56-P1" },
+    body: html(""),
+  }),
+  // A fresh ETag on every request, so revalidation can never 304.
+  "/dynamic/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache", etag: `"n${dynamicCounter++}"` }, body: html("") }),
+  "/max-age-long/": () => ({ headers: { "content-type": "text/html", "cache-control": "max-age=600" }, body: html("") }),
+  "/max-age-short/": () => ({ headers: { "content-type": "text/html", "cache-control": "max-age=120, stale-while-revalidate=60" }, body: html("") }),
+  "/no-store/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-store" }, body: html("") }),
+  "/sw/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "no-cache" },
+    body: html(`<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js")</script>`),
+  }),
+  // An asset server that rejects HEAD.
+  "/head405/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/head405/app.9c8b7a.js"></script>`) }),
+  "/head405/app.9c8b7a.js": (req) => (req.method === "HEAD" ? { status: 405 } : asset(YEAR)(req)),
+
+  "/redirect": () => ({ status: 301, headers: { location: "/good/" } }),
+  "/json": () => ({ headers: { "content-type": "application/json" }, body: "{}" }),
+  "/blocked": () => ({ status: 403, headers: { "content-type": "text/html" }, body: "no" }),
+};
+
+export interface TestServer {
+  url: (path: string) => string;
+  close: () => Promise<void>;
+}
+
+export async function startServer(): Promise<TestServer> {
+  const server = createServer((req, res) => {
+    const path = new URL(req.url ?? "/", "http://x").pathname;
+    const route = routes[path];
+    if (!route) {
+      res.writeHead(404, { "content-type": "text/plain" }).end("not found");
+      return;
+    }
+    const { status = 200, headers = {}, body } = route(req);
+    res.writeHead(status, headers);
+    res.end(req.method === "HEAD" ? undefined : body);
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address() as AddressInfo;
+  return {
+    url: (path) => `http://127.0.0.1:${port}${path}`,
+    close: () => new Promise((resolve) => server.close(() => resolve())),
+  };
+}
