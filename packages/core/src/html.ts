@@ -39,7 +39,8 @@ export function parsePage(html: string, pageUrl: string): ParsedPage {
             raw.push(attrs.href);
           }
         } else if (name === "meta" && attrs.name && attrs.content && !page.buildId && BUILD_META.test(attrs.name)) {
-          page.buildId = { name: attrs.name, content: attrs.content };
+          // It ends up in a title; a build id longer than this isn't one.
+          page.buildId = { name: attrs.name, content: attrs.content.slice(0, 100) };
         }
       },
       ontext(text) {

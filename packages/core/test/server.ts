@@ -74,6 +74,11 @@ const routes: Record<string, Route> = {
   "/head405/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/head405/app.9c8b7a.js"></script>`) }),
   "/head405/app.9c8b7a.js": (req) => (req.method === "HEAD" ? { status: 405 } : asset(YEAR)(req)),
 
+  // Escape sequences in a <meta> tag, which ends up in a finding title.
+  "/escape/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "no-cache" },
+    body: html(`<meta name="build" content="&#27;]0;pwned&#7;&#27;[2J v1&#x202E;">`),
+  }),
   "/redirect": () => ({ status: 301, headers: { location: "/good/" } }),
   "/json": () => ({ headers: { "content-type": "application/json" }, body: "{}" }),
   "/blocked": () => ({ status: 403, headers: { "content-type": "text/html" }, body: "no" }),

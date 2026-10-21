@@ -23,8 +23,44 @@ export function makeStyle(color: boolean): Style {
   return { red: wrap(31, 39), yellow: wrap(33, 39), green: wrap(32, 39), dim: wrap(2, 22), bold: wrap(1, 22) };
 }
 
-export function formatReport(report: Report, options: { verbose: boolean; style: Style; width: number }): string {
+// C0 and C1 controls (newlines included) and bidi overrides. Headers, URLs and <meta> content come from the
+// checked site, and an escape sequence in them would otherwise reach the user's terminal.
+const UNSAFE = /[\x00-\x08\x0a-\x1f\x7f-\x9f‪-‮⁦-⁩]/g;
+
+export function clean(text: string): string {
+  return text.replace(UNSAFE, "?");
+}
+
+function cleanFinding(f: Finding): Finding {
+  return {
+    ...f,
+    title: clean(f.title),
+    detail: clean(f.detail),
+    ...(f.fix ? { fix: clean(f.fix) } : {}),
+    evidence: f.evidence.map((e) => {
+      switch (e.kind) {
+        case "header":
+          return { ...e, url: clean(e.url), name: clean(e.name), value: e.value === null ? null : clean(e.value) };
+        case "status":
+          return { ...e, url: clean(e.url), ...(e.request ? { request: Object.fromEntries(Object.entries(e.request).map(([k, v]) => [clean(k), clean(v)])) } : {}) };
+        case "computed":
+          return { ...e, label: clean(e.label), value: clean(e.value) };
+        case "file":
+          return { ...e, path: clean(e.path), ...(e.excerpt ? { excerpt: clean(e.excerpt) } : {}) };
+      }
+    }),
+  };
+}
+
+export function formatReport(unsafe: Report, options: { verbose: boolean; style: Style; width: number }): string {
   const { style, verbose } = options;
+  const report: Report = {
+    ...unsafe,
+    target: clean(unsafe.target),
+    resolved: clean(unsafe.resolved),
+    ignored: unsafe.ignored.map(clean),
+    findings: unsafe.findings.map(cleanFinding),
+  };
   const width = Math.max(40, Math.min(options.width, 100));
   const marks: Record<Severity, string> = {
     fail: style.red("✗"),

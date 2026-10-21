@@ -68,6 +68,12 @@ describe("output", () => {
     assert.match(stdout, /304 {2}\/good\/ {2}\(if-none-match: "v1"\)/);
   });
 
+  test("control characters from the site never reach the terminal", async () => {
+    const { stdout } = await run(server.url("/escape/"), "--verbose");
+    assert.match(stdout, /The page says which build it is: \?\]0;pwned\?\?\[2J v1\?/);
+    assert.doesNotMatch(stdout, /[\x1b\x07‮]/);
+  });
+
   test("--json prints the report", async () => {
     const report = JSON.parse((await run(server.url("/good/"), "--json")).stdout);
     assert.equal(report.tool.name, "stale-deploy-check");
