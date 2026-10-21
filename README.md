@@ -44,18 +44,20 @@ Options: `--json`, `--out <file>`, `--baseline <file>`, `--strict`, `--ignore <c
 
 ### What it can't see
 
-It checks what any HTTP client can see: the HTML's cache headers, whether asset names are hashed, and the CDN in front of the site. It can't see users' browser caches, their open tabs, or their service workers. The agent skill in [`skill/stale-deploy-check`](https://github.com/ikhattab/stale-deploy-check/blob/main/skill/stale-deploy-check/SKILL.md) runs the CLI, then checks the code that controls those: host header config, whether deploys delete old assets, recovery from failed dynamic imports, and the service worker update flow.
+It checks what any HTTP client can see: the HTML's cache headers, whether asset names are hashed, and the CDN in front of the site. It can't see users' browser caches, their open tabs, or their service workers. The [agent skill](#agent-skill) checks the code that controls those.
 
 ## Agent skill
 
-The skill runs the CLI, then reads your repo for what HTTP can't show. To use it with Claude Code, copy it into your skills folder:
+The CLI checks what HTTP can show. The agent skill runs it, then reads your repo for the rest: host header config, whether deploys delete old assets, recovery from failed dynamic imports, and the service worker update flow. It tests its main claim when that's cheap (a scratch build, a local reproduction), and never edits your code unless you ask.
+
+Install it for Claude Code:
 
 ```sh
-git clone https://github.com/ikhattab/stale-deploy-check
-cp -R stale-deploy-check/skill/stale-deploy-check ~/.claude/skills/
+npx stale-deploy-check install-skill            # for you: ~/.claude/skills
+npx stale-deploy-check install-skill --project  # for this repo: ./.claude/skills, commit it to share
 ```
 
-Then ask something like "users still see the old version after we deploy, can you find out why?" in your project.
+Then, in a new session, ask something like "users still see the old version after we deploy, can you find out why?". Run the same command again after upgrading to update it. If you've edited the installed copy, it won't overwrite it without `--force`.
 
 ## Development
 

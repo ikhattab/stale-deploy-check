@@ -1,4 +1,6 @@
-// Bundles the CLI and core (with htmlparser2) into one file, so the published package has no dependencies.
+// Bundles the CLI and core (with htmlparser2) into one file, so the published package has no dependencies,
+// and ships the agent skill next to it for `stale-deploy-check install-skill`.
+import { cpSync, rmSync } from "node:fs";
 import { build } from "esbuild";
 
 await build({
@@ -13,3 +15,6 @@ await build({
   legalComments: "inline",
   logLevel: "warning",
 });
+
+rmSync("packages/cli/dist/skill", { recursive: true, force: true });
+cpSync("skill/stale-deploy-check", "packages/cli/dist/skill", { recursive: true });
