@@ -93,7 +93,7 @@ export function formatReport(unsafe: Report, options: { verbose: boolean; style:
   lines.push(
     "",
     ...wrap(
-      "Not checked from here: what's in users' browser caches, their open tabs, and their service workers. To check the code that controls them, install the agent skill: npx stale-deploy-check install-skill",
+      "Not checked from here: what's in users' browser caches, their open tabs, and their service workers. To check the code that controls them, add the agent skill: npx skills add ikhattab/stale-deploy-check",
       width,
     ).map(style.dim),
   );

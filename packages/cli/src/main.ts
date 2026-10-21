@@ -2,10 +2,8 @@ import { readFile, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { check, CheckError, VERSION, type CheckOptions, type Report } from "@stale-deploy-check/core";
 import { formatReport, makeStyle } from "./format.ts";
-import { installSkill, skillTarget } from "./install-skill.ts";
 
 const HELP = `Usage: stale-deploy-check <url> [options]
-       stale-deploy-check install-skill [--project | --dir <skills-dir>] [--force]
 
 Checks why users might still see the old version of a page after a deploy:
 the HTML's cache headers, hashed asset names, and the CDN in front of it.
@@ -25,9 +23,6 @@ Options:
   -h, --help             Show this help
   -v, --version          Show the version
 
-install-skill copies the agent skill into ~/.claude/skills (or ./.claude/skills
-with --project), where Claude Code finds it. --force replaces a copy that differs.
-
 Exit codes: 0 no failures, 1 failures found, 2 the check couldn't run.
 `;
 
@@ -37,10 +32,6 @@ export interface Io {
   color: boolean;
   width: number;
   fetch?: CheckOptions["fetch"];
-  /** The skill folder shipped with the CLI, for install-skill. */
-  skillDir: string;
-  cwd: string;
-  env: NodeJS.ProcessEnv;
 }
 
 /** Runs the CLI and returns the exit code. */
@@ -62,9 +53,6 @@ export async function main(argv: string[], io: Io): Promise<number> {
         timeout: { type: "string" },
         verbose: { type: "boolean", default: false },
         "no-color": { type: "boolean", default: false },
-        project: { type: "boolean", default: false },
-        dir: { type: "string" },
-        force: { type: "boolean", default: false },
         help: { type: "boolean", short: "h", default: false },
         version: { type: "boolean", short: "v", default: false },
       },
@@ -82,9 +70,6 @@ export async function main(argv: string[], io: Io): Promise<number> {
   if (values.version) {
     io.stdout(`${VERSION}\n`);
     return 0;
-  }
-  if (positionals[0] === "install-skill" && positionals.length === 1) {
-    return runInstallSkill(values, io);
   }
   if (positionals.length !== 1) {
     io.stderr(`${positionals.length === 0 ? "Missing the URL to check." : "Pass one URL at a time."}\n\n${HELP}`);
@@ -131,35 +116,6 @@ export async function main(argv: string[], io: Io): Promise<number> {
 
   const failing = report.summary.fail + (values.strict ? report.summary.warn : 0);
   return failing > 0 ? 1 : 0;
-}
-
-async function runInstallSkill(values: { project: boolean; dir?: string | undefined; force: boolean }, io: Io): Promise<number> {
-  if (values.project && values.dir) {
-    io.stderr("Use --project or --dir, not both.\n");
-    return 2;
-  }
-  const where = { project: values.project, ...(values.dir ? { dir: values.dir } : {}), cwd: io.cwd, env: io.env };
-  let result;
-  try {
-    result = await installSkill({ source: io.skillDir, force: values.force, ...where });
-  } catch (error) {
-    io.stderr(`Couldn't install the skill to ${skillTarget(where)}: ${(error as Error).message}\n`);
-    return 2;
-  }
-  switch (result.status) {
-    case "unchanged":
-      io.stdout(`The skill at ${result.target} is already up to date.\n`);
-      return 0;
-    case "differs":
-      io.stderr(`${result.target} already exists and differs from this version. Rerun with --force to replace it (edits you made there will be lost).\n`);
-      return 2;
-    default:
-      io.stdout(
-        `${result.status === "installed" ? "Installed" : "Updated"} the stale-deploy-check skill in ${result.target} (${result.files.length} files).\n` +
-          `Claude Code picks it up in new sessions: ask it why users still see the old version after a deploy.\n`,
-      );
-      return 0;
-  }
 }
 
 function optionalInt<T>(raw: string | undefined, flag: string, wrapValue: (n: number) => T): T | Record<string, never> {

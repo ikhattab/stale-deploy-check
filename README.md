@@ -48,16 +48,16 @@ It checks what any HTTP client can see: the HTML's cache headers, whether asset 
 
 ## Agent skill
 
-The CLI checks what HTTP can show. The agent skill runs it, then reads your repo for the rest: host header config, whether deploys delete old assets, recovery from failed dynamic imports, and the service worker update flow. It tests its main claim when that's cheap (a scratch build, a local reproduction), and never edits your code unless you ask.
+The CLI checks what HTTP can show. The agent skill runs it, then reads your repo for the rest: host header config, whether deploys delete old assets, recovery from failed dynamic imports, and the service worker update flow. It tests its main claim when that's cheap (a scratch build, a local reproduction), and doesn't edit your code unless you ask.
 
-Install it for Claude Code:
+Install it with [skills](https://github.com/vercel-labs/skills), which works with Claude Code, Codex, Cursor and other agents:
 
 ```sh
-npx stale-deploy-check install-skill            # for you: ~/.claude/skills
-npx stale-deploy-check install-skill --project  # for this repo: ./.claude/skills, commit it to share
+npx skills add ikhattab/stale-deploy-check        # into this project
+npx skills add ikhattab/stale-deploy-check -g     # for all your projects
 ```
 
-Then, in a new session, ask something like "users still see the old version after we deploy, can you find out why?". Run the same command again after upgrading to update it. If you've edited the installed copy, it won't overwrite it without `--force`.
+Then ask your agent something like "users still see the old version after we deploy, can you find out why?". `npx skills update` picks up new versions.
 
 ## Development
 
@@ -70,7 +70,8 @@ npm test        # node --test against the TypeScript sources
 ```
 packages/core   fetch-only checks that return findings; runs in Node, Workers, and browsers
 packages/cli    the stale-deploy-check command
-skill/          the agent skill; skill/evals has its test prompts and two example repos
+skills/         the agent skill
+evals/          the skill's test prompts and two example repos
 ```
 
 - [docs/findings.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/findings.md): the finding and report format

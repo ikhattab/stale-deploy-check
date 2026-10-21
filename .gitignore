@@ -1,7 +1,7 @@
 node_modules/
 dist/
 *.tsbuildinfo
-skill/stale-deploy-check-workspace/
+evals/workspace/
 packages/cli/README.md
 packages/cli/LICENSE
 *.tgz

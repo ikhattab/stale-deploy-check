@@ -10,9 +10,7 @@
     "service-worker",
     "stale",
     "http-headers",
-    "ci",
-    "claude-code",
-    "agent-skill"
+    "ci"
   ],
   "homepage": "https://github.com/ikhattab/stale-deploy-check#readme",
   "repository": {
@@ -28,8 +26,7 @@
     "stale-deploy-check": "dist/stale-deploy-check.js"
   },
   "files": [
-    "dist/stale-deploy-check.js",
-    "dist/skill"
+    "dist/stale-deploy-check.js"
   ],
   "scripts": {
     "prepack": "cp ../../README.md ../../LICENSE ."
