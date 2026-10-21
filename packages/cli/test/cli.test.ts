@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, test } from "node:test";
+import { once } from "node:events";
 import { promisify } from "node:util";
 import { startServer, type TestServer } from "../../core/test/server.ts";
 import { main } from "../src/main.ts";
@@ -97,6 +98,23 @@ describe("output", () => {
     assert.equal(r.code, 2);
     assert.match(r.stderr, /Couldn't read the baseline report/);
   });
+});
+
+test("the bundled bin exits quietly when stdout closes early", async () => {
+  const bin = new URL("../dist/stale-deploy-check.js", import.meta.url).pathname;
+  const child = spawn(process.execPath, [bin, server.url("/good/"), "--json"], { stdio: ["ignore", "pipe", "pipe"] });
+  // Like `| head -0`: the reader goes away before the report is written.
+  child.stdout.destroy();
+  let stderr = "";
+  child.stderr.on("data", (d) => (stderr += d));
+  const [code] = await once(child, "exit");
+  assert.equal(stderr, "");
+  assert.equal(code, 0);
+});
+
+test("the CLI reports the version in its package.json", async () => {
+  const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  assert.equal((await run("--version")).stdout, `${pkg.version}\n`);
 });
 
 test("the bundled bin runs on its own", async () => {
