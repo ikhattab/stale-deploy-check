@@ -23,7 +23,7 @@
   "author": "Ihab Khattab",
   "type": "module",
   "bin": {
-    "stale-deploy-check": "./dist/stale-deploy-check.js"
+    "stale-deploy-check": "dist/stale-deploy-check.js"
   },
   "files": [
     "dist/stale-deploy-check.js"
