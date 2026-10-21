@@ -1,0 +1,65 @@
+{
+  "skill_name": "stale-deploy-check",
+  "evals": [
+    {
+      "id": 1,
+      "name": "blank-screen-vite-s3",
+      "prompt": "ugh, every time we deploy our admin dashboard a few people get a blank white screen and the console says \"Failed to fetch dynamically imported module\". refreshing fixes it. can you figure out why from the repo? it's a vite + react app, we deploy to s3/cloudfront from github actions",
+      "expected_output": "No URL is given and none is in the repo, so the skill skips the CLI and says the headers weren't checked. It finds `aws s3 sync --delete` in the workflow (code.asset-retention fail, file:line) and no `vite:preloadError` handler (code.chunk-load-recovery warn, saying where it searched), suggests the guarded reload, and links Question 6.",
+      "files": [
+        "fixtures/vite-s3-dashboard/"
+      ],
+      "expectations": [
+        "Identifies 'aws s3 sync --delete' in .github/workflows/deploy.yml as removing the old hashed chunks that pre-deploy tabs still request, citing the file",
+        "Says the app has no recovery for a failed dynamic import (no vite:preloadError or equivalent handler) and names where it looked (e.g. src/App.tsx lazy routes)",
+        "Proposes reloading once on a failed chunk load with a loop guard (sessionStorage flag or equivalent)",
+        "Proposes keeping old assets across deploys (sync without --delete, delete later) as a fix",
+        "Flags that --cache-control 'public, max-age=3600' applies to index.html too, so browsers can reuse old HTML for up to an hour",
+        "Says plainly that live headers weren't checked because no URL was available (or checked them), rather than implying they were",
+        "Links to the article section for the open-tab problem (#question-6-...)",
+        "Leaves the repo unmodified",
+        "Opens with a direct answer to the user's question (cause or verdict) in the first two sentences",
+        "Backs the main conclusion with a test (a reproduction, a build in a scratch copy, or a live request), or says why it couldn't"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "pwa-update-waits-for-tabs",
+      "prompt": "We added vite-plugin-pwa last sprint so the app works offline. Since then QA says new releases don't show up until they close every tab, even after several reloads. Is that expected? Repo is the current directory.",
+      "expected_output": "Explains that the new worker waits while any tab uses the old one, and that reloading doesn't help. Finds registerType 'prompt' with no onNeedRefresh / registration.waiting handling (code.sw-update-flow warn, file:line), notes navigations come from the precached shell (code.sw-html-cache-first), and recommends a prompt-then-reload flow instead of switching to autoUpdate/skipWaiting. Links Question 7.",
+      "files": [
+        "fixtures/vite-pwa-prompt/"
+      ],
+      "expectations": [
+        "Says yes, it's expected: the new service worker waits until no tab uses the old one, and reloading doesn't hand over control",
+        "Points at registerType 'prompt' in vite.config.ts together with registerSW() in src/main.ts having no onNeedRefresh handler, citing both files",
+        "Recommends a prompt flow: onNeedRefresh shows a message and calls updateSW(true) (or equivalent) when the user agrees",
+        "If it mentions autoUpdate/skipWaiting, warns that taking over immediately can break pages still running old code",
+        "Notes that navigations are served from the precached index.html (navigateFallback), so HTTP headers don't decide HTML freshness",
+        "Links to the article section for service workers (#question-7-...)",
+        "Leaves the repo unmodified",
+        "Opens with a direct answer to the user's question (cause or verdict) in the first two sentences",
+        "Backs the main conclusion with a test (a reproduction, a build in a scratch copy, or a live request), or says why it couldn't"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "real-site-astro-workers",
+      "prompt": "before I publish the next post, can you check that ihabkhattab.com won't serve people stale pages after a deploy? repo is ~/Workspace/personal-website",
+      "expected_output": "Runs the CLI against https://ihabkhattab.com/ and reads the repo. Reports that /_astro/* is hashed but served max-age=0 and proposes a _headers rule for /_astro/* (code.host-html-headers, naming the file). For the HTML's missing ETag, reads src/worker.ts, sees that it copies headers through (line 15), and points to Cloudflare's HTML-rewriting zone features (Email Obfuscation and similar) as dashboard settings to check, without claiming which one is on. Treats the Cloudflare HIT without Age as info. Notes there's no service worker on the site itself, and doesn't edit files.",
+      "files": [],
+      "expectations": [
+        "Checked the live site (ran the CLI or fetched headers) and reports the headers it actually saw",
+        "Answers the question directly: HTML is revalidated on every use (max-age=0, must-revalidate), so a deploy reaches browsers on their next visit",
+        "Identifies that hashed /_astro/* files are served max-age=0 and proposes a long immutable rule, naming public/_headers (or equivalent) as the file to add",
+        "Reports the HTML's missing ETag without claiming src/worker.ts drops it (the Worker copies headers through)",
+        "Treats Cloudflare's cache HIT on HTML as not a stale-page risk (Worker cache is per-version / no Age), rather than telling the user to purge or remove a rule",
+        "Doesn't report a real service worker on the site (the only register() call is a code sample in a blog post)",
+        "Leaves the personal-website repo unmodified (git status clean)",
+        "Opens with a direct answer to the user's question (cause or verdict) in the first two sentences",
+        "Backs the main conclusion with a test (a reproduction, a build in a scratch copy, or a live request), or says why it couldn't",
+        "Reply is 600 words or fewer, since nothing fails and the user asked for a verdict"
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ Find out why users still see the old version after a deploy.
 
 Based on [We Deployed an Hour Ago. Why Do Users Still See the Old Version?](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/), which walks through the four places an old copy can live: the HTTP cache, the CDN, the open tab, and the service worker.
 
-> Status: the CLI works; not published to npm yet. The agent skill comes next.
+> Status: the CLI and the agent skill work; neither is published yet.
 
 ## Usage
 
@@ -45,7 +45,7 @@ Options: `--json`, `--out <file>`, `--baseline <file>`, `--strict`, `--ignore <c
 
 ### What it can't see
 
-It checks what any HTTP client can see: the HTML's cache headers, whether asset names are hashed, and the CDN in front of the site. It can't see users' browser caches, their open tabs, or their service workers. The agent skill (planned) checks the code that controls those.
+It checks what any HTTP client can see: the HTML's cache headers, whether asset names are hashed, and the CDN in front of the site. It can't see users' browser caches, their open tabs, or their service workers. The agent skill in [`skill/stale-deploy-check`](skill/stale-deploy-check/SKILL.md) runs the CLI, then checks the code that controls those: host header config, whether deploys delete old assets, recovery from failed dynamic imports, and the service worker update flow.
 
 ## Development
 
@@ -58,6 +58,7 @@ npm test        # node --test against the TypeScript sources
 ```
 packages/core   fetch-only checks that return findings; runs in Node, Workers, and browsers
 packages/cli    the stale-deploy-check command
+skill/          the agent skill; skill/evals has its test prompts and two example repos
 ```
 
 - [docs/findings.md](docs/findings.md): the finding and report format
