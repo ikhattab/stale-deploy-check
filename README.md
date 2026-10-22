@@ -159,24 +159,25 @@ What it won't do: edit your code unless you ask, install packages or build in yo
 
 ```sh
 npm install
-npm run build   # tsc -b, then bundle the CLI and the probe snippet (packages/probe/dist/stale-deploy-check.snippet.js)
+npm run build   # tsc -b, then bundle the CLI, the probe snippet, and the extension
 npm test        # node --test against the TypeScript sources
 ```
 
 ```
-packages/core   fetch-only checks that return findings; runs in Node, Workers, and browsers
-packages/cli    the stale-deploy-check command
-packages/probe  runs inside a tab: is it on the old version, and why (built as a console snippet)
-skills/         the agent skill
-evals/          the skill's test prompts and two example repos
-calibration/    runs the CLI against 50 real sites and compares versions
-action.yml      the GitHub Action; action/check.sh does the work, and CI runs it against the test server
+packages/core       fetch-only checks that return findings; runs in Node, Workers, and browsers
+packages/cli        the stale-deploy-check command
+packages/probe      runs inside a tab: is it on the old version, and why (built as a console snippet)
+packages/extension  a browser extension that runs the probe on the current tab (load packages/extension/dist/chrome unpacked)
+skills/             the agent skill
+evals/              the skill's test prompts and two example repos
+calibration/        runs the CLI against 50 real sites and compares versions
+action.yml          the GitHub Action; action/check.sh does the work, and CI runs it against the test server
 ```
 
 - [docs/checks.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/checks.md): every check, what triggers it, and where the article explains it
 - [docs/findings.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/findings.md): the finding and report format
 
-Releases: push a `vX.Y.Z` tag that matches `packages/cli/package.json`. [`release.yml`](https://github.com/ikhattab/stale-deploy-check/blob/main/.github/workflows/release.yml) tests the tag and, once a maintainer approves the `npm` environment, publishes to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers) and provenance. After npm lists the version, move the `v0` tag to it for the action.
+Releases: bump every `package.json` and `packages/extension/static/manifest.json` (a test checks they match), then push a `vX.Y.Z` tag that matches `packages/cli/package.json`. [`release.yml`](https://github.com/ikhattab/stale-deploy-check/blob/main/.github/workflows/release.yml) tests the tag and, once a maintainer approves the `npm` environment, publishes to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers) and provenance. After npm lists the version, move the `v0` tag to it for the action.
 
 ## License
 

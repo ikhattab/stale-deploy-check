@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>stale-deploy-check</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <strong>stale-deploy-check</strong>
+      <span id="page"></span>
+    </header>
+    <p id="summary" aria-live="polite">Checking this tab…</p>
+    <ol id="findings"></ol>
+    <footer>
+      <button id="copy" type="button" disabled>Copy report</button>
+      <button id="again" type="button">Check again</button>
+      <span id="status" aria-live="polite"></span>
+    </footer>
+    <script src="popup.js"></script>
+  </body>
+</html>
