@@ -4,10 +4,10 @@ Unit tests show the checks do what the code says. This shows whether that's righ
 
 ```sh
 npm run build
-node calibration/run.mjs --cli npm:0.3.1 &   # the last release, through npx
+node calibration/run.mjs --cli npm:0.3.2 &   # the last release, through npx
 node calibration/run.mjs                      # the working tree
 wait
-node calibration/report.mjs calibration/results/npm-0.3.1.json calibration/results/local.json
+node calibration/report.mjs calibration/results/npm-0.3.2.json calibration/results/local.json
 ```
 
 Run both at the same time so a difference comes from the tool, not from a site that changed in between. Each run makes about 22 requests per site, 4 sites at a time.
@@ -40,3 +40,5 @@ Checked and left as they are:
 - **`assets.unhashed-long-cache` fails (2)**: python.org's `modernizr.js` and others for 7 days, docs.python.org's `rtd_switcher.js` for 23 days by heuristic.
 - **`cdn.edge-rule-suspected` on Fastly (3)**: right, but the detail now explains Surrogate-Control instead of suggesting a cache-everything rule.
 - **gohugo.io and squoosh.app** time out from this network with plain `curl` too, so that's not the tool.
+
+The published 0.3.2 gave the same results as the working tree, apart from theguardian.com's `html.revalidation`, which comes and goes between runs. `results/npm-0.3.2.json` is the baseline now.
