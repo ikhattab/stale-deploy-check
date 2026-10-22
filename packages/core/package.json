@@ -1,6 +1,6 @@
 {
   "name": "@stale-deploy-check/core",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Checks why users still see the old version after a deploy. Uses only fetch, so it runs in Node, Workers, and browsers.",
   "type": "module",
   "exports": {
