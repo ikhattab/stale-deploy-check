@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { fixPrompt, parsePage, type Finding } from "@stale-deploy-check/core";
 import { startServer, type TestServer } from "../../core/test/server.ts";
-import { analyze, answeredByWorker, htmlSource, printReport, type NavigationSnapshot, type ProbeEnv, type TabReport, type TabSnapshot } from "../src/index.ts";
+import { analyze, answeredByWorker, htmlSource, printReport, tabPrompt, type NavigationSnapshot, type ProbeEnv, type TabReport, type TabSnapshot } from "../src/index.ts";
 
 let server: TestServer;
 before(async () => {
@@ -204,4 +204,23 @@ test("the browser prompt asks for a fix in the repo, and keeps page values on th
   assert.doesNotMatch(prompt, /^## Ignore/m);
   assert.match(prompt, /\n```sh\nnpx stale-deploy-check@0\.5 https:\/\/example\.com\/\n```\n$/);
   assert.equal(fixPrompt({ from: "browser", site: report.url, version: "0.5.1", findings: report.findings.filter((f) => f.severity === "pass"), rerun: "" }), undefined);
+});
+
+test("tabPrompt ends with the CLI command for this page, and the snippet points to it only when there's something to fix", async () => {
+  const old = await analyze(tab("/released/", { buildId: build("41"), navigation: fromWorker }), env);
+  const prompt = tabPrompt(old)!;
+  const minor = old.tool.version.split(".").slice(0, 2).join(".");
+  assert.ok(prompt.endsWith(`\n\`\`\`sh\nnpx stale-deploy-check@${minor} ${server.url("/released/")}\n\`\`\`\n`));
+
+  const lines = (report: TabReport, options?: { promptVariable?: string }) => {
+    const calls: unknown[][] = [];
+    const record = (...args: unknown[]) => void calls.push(args);
+    printReport(report, { log: record, group: record, groupCollapsed: record, groupEnd: () => {} }, options);
+    return calls.map((args) => args.join(" "));
+  };
+  assert.ok(lines(old, { promptVariable: "staleDeployCheckPrompt" }).some((l) => l.includes("copy(%s)") && l.includes("staleDeployCheckPrompt")));
+  assert.ok(!lines(old).some((l) => l.includes("staleDeployCheckPrompt")));
+
+  const live = await analyze(tab("/good/", { buildId: build("2026-10-22.1") }), env);
+  assert.equal(tabPrompt(live), undefined);
 });
