@@ -1,6 +1,6 @@
 {
   "name": "stale-deploy-check",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "Find out why users still see the old version after a deploy.",
   "keywords": [
     "cache",
@@ -32,7 +32,7 @@
     "prepack": "cp ../../README.md ../../LICENSE ."
   },
   "devDependencies": {
-    "@stale-deploy-check/core": "0.3.4"
+    "@stale-deploy-check/core": "0.4.0"
   },
   "engines": {
     "node": ">=20.12"
