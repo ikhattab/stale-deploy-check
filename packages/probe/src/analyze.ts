@@ -20,8 +20,8 @@ export interface ProbeEnv {
   fetch: FetchLike;
   /** Reads a fetched HTML page. DOMParser in the browser; core's parsePage in tests. */
   readPage(html: string, url: string): { buildId?: BuildId; assets: string[] };
-  /** Resource Timing for a URL the probe requested, to tell whether the tab's service worker answered it from its cache. */
-  timing?(url: string): { workerStart: number; transferSize: number } | undefined;
+  /** Resource Timing for a URL the probe requested, to tell whether the tab's service worker answered it from a cache. */
+  timing?(url: string): { workerStart: number; transferSize: number; deliveryType?: string } | undefined;
   timeoutMs?: number;
 }
 
@@ -39,7 +39,7 @@ interface Live {
   record: RequestRecord;
   buildId?: BuildId;
   assets: string[];
-  /** The tab's service worker answered the request from its cache, so this isn't what the server has. */
+  /** The tab's service worker answered the request from a cache, so this isn't what the server has. */
   fromWorker: boolean;
 }
 
@@ -61,8 +61,7 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
     if (record.status >= 400 || !/text\/html|application\/xhtml\+xml/i.test(record.headers["content-type"] ?? "")) {
       live = { error: `${record.url} returned ${record.status} ${record.headers["content-type"] ?? ""}`.trim() };
     } else {
-      const timing = env.timing?.(tab.url);
-      live = { record, ...env.readPage(body, record.url), fromWorker: !!timing && timing.workerStart > 0 && timing.transferSize === 0 };
+      live = { record, ...env.readPage(body, record.url), fromWorker: answeredByWorker(env.timing?.(tab.url)) };
     }
   } catch (error) {
     live = { error: describe(error) };
@@ -76,7 +75,8 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
   const assets = await mapLimit(changed.slice(0, MAX_ASSET_REQUESTS), CONCURRENCY, async (url): Promise<Asset> => {
     try {
       let { record } = await request(url, "HEAD");
-      if (record.status === 405 || record.status === 501) ({ record } = await request(url, "GET"));
+      // Some servers answer HEAD with a 404 for a file GET serves, like Cloudflare Zaraz's /static/z/i.js.
+      if (record.status >= 400) ({ record } = await request(url, "GET"));
       return { url, record };
     } catch (error) {
       return { url, error: describe(error) };
@@ -101,6 +101,17 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
     findings,
     summary: summarize(findings),
   };
+}
+
+/**
+ * Whether the tab's service worker answered a request without the network. Chrome's deliveryType says so for
+ * Cache Storage ("cache-storage") and for a worker whose own fetch hit the HTTP cache ("cache", seen on web.dev).
+ * Elsewhere, 0 bytes transferred is the best sign there is.
+ */
+export function answeredByWorker(timing: { workerStart: number; transferSize: number; deliveryType?: string } | undefined): boolean {
+  if (!timing || timing.workerStart <= 0) return false;
+  if (timing.deliveryType !== undefined) return timing.deliveryType === "cache" || timing.deliveryType === "cache-storage";
+  return timing.transferSize === 0;
 }
 
 /** Where this tab's HTML came from, as far as Navigation Timing says. */
@@ -132,9 +143,9 @@ function buildCheck(tab: TabSnapshot, live: Live | { error: string }, source: Ht
       ...base,
       layer: "service-worker",
       severity: "info",
-      title: "The service worker answered the probe's request for the live page",
+      title: "The service worker answered the probe's request for the live page from a cache",
       detail:
-        "The request never reached the network, so the probe can't tell what the server sends now. " +
+        "The request never reached the server, so the probe can't tell what the server sends now. " +
         "Run npx stale-deploy-check on this URL to see the server's copy, or open the page in a private window, where no service worker is installed.",
       evidence: [computed("live page", "served by the service worker's cache")],
       learnMore: learn.serviceWorker,
@@ -417,18 +428,22 @@ function assetChecks(tab: TabSnapshot, own: string[], changed: string[], assets:
   const failed = assets.filter((a) => a.error);
   const otherOrigins = tab.assets.length - own.length;
   const overCap = changed.length - assets.length;
-  if (failed.length + otherOrigins + overCap > 0) {
+  if (failed.length + otherOrigins + overCap > 0 || tab.resourceTimingFull) {
     const parts = [
       failed.length ? `${plural(failed.length, "request")} failed, usually because the server doesn't allow reading the response from this page (CORS)` : "",
       otherOrigins ? `${plural(otherOrigins, "file")} on other origins weren't requested` : "",
       overCap ? `${plural(overCap, "file")} past the first ${MAX_ASSET_REQUESTS} weren't requested` : "",
+      tab.resourceTimingFull
+        ? "the browser's list of loaded files (Resource Timing) was full, so files this tab loaded after it filled, and that aren't in the page's HTML, weren't seen"
+        : "",
     ].filter(Boolean);
+    const count = failed.length + otherOrigins + overCap;
     findings.push({
       ...base,
       check: "tab.assets-not-checked",
       severity: "info",
-      title: `${plural(failed.length + otherOrigins + overCap, "file")} this tab loaded weren't checked`,
-      detail: `${parts.join("; ")}.`,
+      title: count > 0 ? `${plural(count, "file")} this tab loaded weren't checked` : "Some files this tab loaded may not have been seen",
+      detail: `${parts.join("; ")}.`.replace(/^./, (c) => c.toUpperCase()),
       evidence: failed.slice(0, 5).map((a) => computed(a.url, a.error!)),
     });
   }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { parsePage, type Finding } from "@stale-deploy-check/core";
 import { startServer, type TestServer } from "../../core/test/server.ts";
-import { analyze, htmlSource, printReport, type NavigationSnapshot, type ProbeEnv, type TabReport, type TabSnapshot } from "../src/index.ts";
+import { analyze, answeredByWorker, htmlSource, printReport, type NavigationSnapshot, type ProbeEnv, type TabReport, type TabSnapshot } from "../src/index.ts";
 
 let server: TestServer;
 before(async () => {
@@ -85,6 +85,19 @@ describe("tab.build", () => {
   });
 });
 
+describe("answeredByWorker", () => {
+  test("trusts Chrome's deliveryType, and 0 bytes elsewhere", () => {
+    // excalidraw.com: from Cache Storage. web.dev: the worker's own fetch hit the HTTP cache, despite the probe's no-store.
+    assert.equal(answeredByWorker({ workerStart: 2231.3, transferSize: 0, deliveryType: "cache-storage" }), true);
+    assert.equal(answeredByWorker({ workerStart: 3849.2, transferSize: 0, deliveryType: "cache" }), true);
+    // Passed through to the network.
+    assert.equal(answeredByWorker({ workerStart: 12, transferSize: 0, deliveryType: "" }), false);
+    assert.equal(answeredByWorker({ workerStart: 12, transferSize: 0 }), true);
+    assert.equal(answeredByWorker({ workerStart: 0, transferSize: 0, deliveryType: "cache" }), false);
+    assert.equal(answeredByWorker(undefined), false);
+  });
+});
+
 describe("htmlSource", () => {
   test("reads Navigation Timing the way the Network panel's Size column does", () => {
     assert.equal(htmlSource(undefined), "unknown");
@@ -120,6 +133,24 @@ describe("files this tab loaded", () => {
     const f = find(report, "tab.assets-kept")!;
     assert.equal(f.severity, "pass");
     assert.equal(f.title, "The file this tab loaded that the live page doesn't reference still loads");
+  });
+
+  test("a 404 to HEAD is checked again with GET", async () => {
+    // Cloudflare Zaraz's /static/z/i.js answers HEAD with 404 and GET with 200.
+    const kept = server.url("/good/assets/kept.222bbb.js");
+    const headless: ProbeEnv = {
+      ...env,
+      fetch: (input, init) => (input === kept && init.method === "HEAD" ? Promise.resolve(new Response(null, { status: 404 })) : fetch(input, init)),
+    };
+    const report = await analyze(tab("/released/", { assets: [kept] }), headless);
+    assert.equal(find(report, "tab.assets-removed"), undefined);
+    assert.equal(find(report, "tab.assets-kept")?.severity, "pass");
+  });
+
+  test("a full Resource Timing buffer is said, not hidden", async () => {
+    const f = find(await analyze(tab("/good/", { resourceTimingFull: true }), env), "tab.assets-not-checked")!;
+    assert.equal(f.title, "Some files this tab loaded may not have been seen");
+    assert.match(f.detail, /^The browser's list of loaded files \(Resource Timing\) was full/);
   });
 
   test("other origins and failed requests are counted, not guessed", async () => {

@@ -12,6 +12,8 @@ export interface TabSnapshot {
   navigation?: NavigationSnapshot;
   /** Scripts and stylesheets this tab loaded or references: Resource Timing entries plus the DOM. */
   assets: string[];
+  /** Resource Timing stopped recording (250 entries by default), so files loaded later are only known if the DOM still has them. */
+  resourceTimingFull?: boolean;
   /** "unsupported" outside a secure context, where navigator.serviceWorker doesn't exist. */
   serviceWorker: ServiceWorkerSnapshot | "unsupported";
   /** Copies of this page in Cache Storage, which a service worker can answer navigations from. */
