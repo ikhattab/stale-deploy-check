@@ -4,11 +4,12 @@
   "type": "module",
   "workspaces": [
     "packages/core",
-    "packages/cli"
+    "packages/cli",
+    "packages/probe"
   ],
   "scripts": {
-    "build": "tsc -b packages/core packages/cli && node scripts/bundle.mjs",
-    "typecheck": "tsc -b packages/core packages/cli",
+    "build": "tsc -b packages/core packages/cli packages/probe && node scripts/bundle.mjs",
+    "typecheck": "tsc -b packages/core packages/cli packages/probe",
     "test": "node --conditions=source --test 'packages/*/test/*.test.ts'",
     "check": "npm run build && npm test"
   },

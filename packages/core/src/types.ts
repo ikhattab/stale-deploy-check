@@ -12,8 +12,8 @@ export type Layer = "service-worker" | "http-cache" | "cdn" | "open-tab" | "diag
  */
 export type Severity = "fail" | "warn" | "info" | "pass";
 
-/** Where the finding came from. The CLI only produces "headers". */
-export type Source = "headers" | "code";
+/** Where the finding came from. The CLI only produces "headers"; "browser" is the in-page probe, which reads a tab's own state. */
+export type Source = "headers" | "code" | "browser";
 
 export interface Finding {
   /** Stable, dotted id. Safe to match on in CI and to put in an ignore list. */

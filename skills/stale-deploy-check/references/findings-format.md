@@ -19,8 +19,8 @@ type Layer = "service-worker" | "http-cache" | "cdn" | "open-tab" | "diagnostics
  */
 type Severity = "fail" | "warn" | "info" | "pass";
 
-/** Where the finding came from. The CLI only produces "headers". */
-type Source = "headers" | "code";
+/** Where the finding came from. The CLI only produces "headers"; "browser" is the in-page probe, which reads a tab's own state. */
+type Source = "headers" | "code" | "browser";
 
 interface Finding {
   /** Stable, dotted id. Safe to match on in CI and to put in an ignore list. */
