@@ -1,8 +1,8 @@
 // The toolbar popup. Opening it is the click that grants activeTab, which is all the extension asks for: it can
 // read this tab and request this tab's origin, nothing else. The tab is read in the extension's isolated world,
 // and the requests go from here, so the page's service worker can't answer them.
-import { ARTICLE, clean, fixPrompt, shellQuote, type Finding, type Severity } from "@stale-deploy-check/core";
-import { analyze, ordered, readPage, type TabReport, type TabSnapshot } from "@stale-deploy-check/probe";
+import { ARTICLE, type Finding, type Severity } from "@stale-deploy-check/core";
+import { analyze, ordered, readPage, tabPrompt, type TabReport, type TabSnapshot } from "@stale-deploy-check/probe";
 
 const MARKS: Record<Severity, string> = { fail: "✗", warn: "!", info: "·", pass: "✓" };
 
@@ -51,8 +51,7 @@ function render(r: TabReport): void {
   byId("findings").replaceChildren(...ordered(r.findings).map(item));
   byId("copy").toggleAttribute("disabled", false);
   // The same prompt as the CLI's --prompt, written for findings from a tab. Only when there's something to fix.
-  const minor = r.tool.version.split(".").slice(0, 2).join(".");
-  prompt = fixPrompt({ from: "browser", site: r.url, version: r.tool.version, findings: r.findings, rerun: `npx stale-deploy-check@${minor} ${shellQuote(clean(r.url))}` });
+  prompt = tabPrompt(r);
   byId("prompt").hidden = !prompt;
 }
 

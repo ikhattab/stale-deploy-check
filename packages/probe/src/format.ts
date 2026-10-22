@@ -11,7 +11,7 @@ const STYLES: Record<Severity, string> = { fail: "color:#d93025;font-weight:bold
  * Prints a report to the DevTools console: problems expanded, the rest collapsed.
  * Text from the page only ever goes in through %s, never in the format string, where a "%c" in a build id would restyle the output.
  */
-export function printReport(report: TabReport, out: Out = console): void {
+export function printReport(report: TabReport, out: Out = console, options: { promptVariable?: string } = {}): void {
   const s = report.summary;
   const counts = [s.fail ? `${s.fail} fail` : "", s.warn ? `${s.warn} warn` : "", s.info ? `${s.info} info` : ""].filter(Boolean).join(" · ");
   out.log("%cstale-deploy-check%c %s  →  %s", "font-weight:bold", "", report.url, counts || "no problems found");
@@ -24,6 +24,9 @@ export function printReport(report: TabReport, out: Out = console): void {
     for (const e of f.evidence) out.log("%c%s", "color:gray", evidence(e));
     out.log("%s", f.learnMore);
     out.groupEnd();
+  }
+  if (options.promptVariable) {
+    out.log("%cRun copy(%s) to copy a prompt for your coding agent to fix these, in the site's repo.", "font-weight:bold", options.promptVariable);
   }
   out.log("%cRun copy(staleDeployCheck) to copy the full report as JSON.", "color:gray");
 }
