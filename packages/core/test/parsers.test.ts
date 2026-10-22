@@ -72,8 +72,17 @@ describe("hasContentHash", () => {
     "/js/polyfills-es2015.4f2c9a1b.js",
     // Vite's base64url hashes can contain a dash.
     "/assets/index-Bq-xKzWe.js",
+    // Found by calibration/ against real sites:
+    "/_next/static/chunks/0aqjr575~-kiw.js", // Turbopack: ~ in the hash
+    "/_next/static/chunks/017r-ibrf-le-.css", // a four-letter run that isn't a word
+    "/_app/immutable/chunks/DHFLKPNG.js", // SvelteKit: all capitals, in a folder that only holds hashed files
+    "/_astro/ec.uumq6.css", // Astro: a five-character hash
+    "/assets/app/styles/public/global.@lQ7lA2.css", // Remix 3: @ before the hash
+    "/assets/app/actions/public/document-redirect.@qw-qRq.ts", // Remix 3 serves .ts
+    "/_static/pygments.css?v=b86133f3", // Sphinx: a content hash in the query
+    "/news.css?xRLUGZw7cmuze0dugP4m", // Hacker News: the whole query is the hash
   ];
-  const unhashed = ["/app.js", "/app.bundle.js", "/framework-polyfills.js", "/assets/vendor.min.js", "/static/runtime.js", "/main.mjs?v=42", "/rum.js", "/vendors-node_modules_react.js", "/es2015-polyfills.js", "/polyfills-es2015.js", "/app-v2.js", "/guide.md.lean.js", "/js/chunk-vendors-2.js"];
+  const unhashed = ["/app.js", "/app.bundle.js", "/framework-polyfills.js", "/assets/vendor.min.js", "/static/runtime.js", "/main.mjs?v=42", "/rum.js", "/vendors-node_modules_react.js", "/es2015-polyfills.js", "/polyfills-es2015.js", "/app-v2.js", "/guide.md.lean.js", "/js/chunk-vendors-2.js", "/style.css?ver=24.2.0", "/style.css?ver=1781196442", "/app.js?theme=darkMode", "/wp-content/themes/wporg-parent-2021/build/style.css?ver=1781196442", "/static/js/libs/modernizr.js"];
 
   for (const path of hashed) test(`hashed: ${path}`, () => assert.ok(hasContentHash(`https://example.com${path}`)));
   for (const path of unhashed) test(`not hashed: ${path}`, () => assert.ok(!hasContentHash(`https://example.com${path}`)));

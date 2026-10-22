@@ -43,13 +43,15 @@ Nothing else: no crawling, no guessing paths like `/sw.js`.
 | `assets.no-immutable` | info | Hashed asset with a long `max-age` but no `immutable`. | Q3 |
 | `assets.not-checked` | info | Assets on other origins, assets over the `--max-assets` limit, or no assets in the HTML at all. Names the origin with the most files so it can be added with `--asset-origin`, and says so in the title when nothing was checked at all. | Q4 |
 
-"Has a content hash" is a name heuristic only; we don't hash the bytes. A token counts as a hash when it's at least 6 characters of `[A-Za-z0-9_-]` and has a digit or mixes upper and lower case (so `bundle` and `framework` don't count). Build-target names like `es2015` or `v2` don't count, and neither does a dashed token with a plain word in it (`es2015-polyfills`, `vendors-2`). A URL is hashed when any of these hold:
+"Has a content hash" is a name heuristic only; we don't hash the bytes. A token counts as a hash when it's at least 6 characters of `[A-Za-z0-9_~-]` and has a digit or mixes upper and lower case (so `bundle` and `framework` don't count). Build-target names like `es2015` or `v2` don't count, and neither does a dashed token with a bundler word in it (`es2015-polyfills`, `vendors-2`). A URL is hashed when any of these hold:
 
-- any dot-separated part of the file name after the first is a hash: `app.3f9a1c.js`, `main.8b1e07ab.chunk.js`, `index.md.DNpnSOya.lean.js` (VitePress)
+- it's in a folder that a framework fills only with hashed files: `/_next/static/`, `/_app/immutable/` (SvelteKit), `/_astro/`
+- any dot-separated part of the file name after the first is a hash, with or without a leading `@`: `app.3f9a1c.js`, `main.8b1e07ab.chunk.js`, `index.md.DNpnSOya.lean.js` (VitePress), `global.@lQ7lA2.css` (Remix 3)
 - what follows a dash is a hash: `index-BxKaQzWe.css`, `index-Bq-xKzWe.js`
 - the whole file name is a hash of 8+ characters: `1omje2kalxx-o.css` (Vercel's Next.js build)
 - the name has a semver: `jquery-3.7.1.min.js`
 - a directory is a hash of 8+ characters: `/_next/static/a1B2c3D4e5/_buildManifest.js`
+- the query holds one: a version parameter with a hash in it (`?v=b86133f3`, Sphinx), or a query that is only the hash (`?xRLUGZw7cmuze0dugP4m`). A number or version (`?v=42`, `?ver=24.2.0`) is a build number, and gets `assets.query-version` instead.
 
 ### CDN
 
