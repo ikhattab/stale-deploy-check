@@ -1,0 +1,1989 @@
+{
+  "version": "0.3.1",
+  "checkedAt": "2026-10-22T13:19:13.647Z",
+  "sites": [
+    {
+      "url": "https://nextjs.org/",
+      "why": "Next.js on Vercel",
+      "exit": 0,
+      "resolved": "https://nextjs.org/",
+      "cdn": "Vercel",
+      "assets": 33,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 4,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 13 over the 20-file limit"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Vercel (edge fra1)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Vercel (edge fra1) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://vercel.com/",
+      "why": "Next.js on Vercel, large page",
+      "exit": 0,
+      "resolved": "https://vercel.com/",
+      "cdn": "Vercel",
+      "assets": 45,
+      "summary": {
+        "fail": 0,
+        "warn": 0,
+        "info": 4,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 25 over the 20-file limit"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Vercel (edge fra1)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Vercel (edge fra1) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://react.dev/",
+      "why": "Next.js static export",
+      "exit": 0,
+      "resolved": "https://react.dev/",
+      "cdn": "Vercel",
+      "assets": 11,
+      "summary": {
+        "fail": 0,
+        "warn": 0,
+        "info": 4,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Vercel (edge fra1)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Vercel (edge fra1) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://tailwindcss.com/",
+      "why": "Next.js on Vercel",
+      "exit": 1,
+      "resolved": "https://tailwindcss.com/",
+      "cdn": "Cloudflare",
+      "assets": 17,
+      "summary": {
+        "fail": 1,
+        "warn": 1,
+        "info": 3,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.unhashed-long-cache",
+          "severity": "fail",
+          "title": "7 files without a hash in the name are cached for a day or more"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.edge-rule-suspected",
+          "severity": "warn",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache, but the headers don't ask it to"
+        }
+      ]
+    },
+    {
+      "url": "https://nuxt.com/",
+      "why": "Nuxt",
+      "exit": 0,
+      "resolved": "https://nuxt.com/",
+      "cdn": "Vercel",
+      "assets": 94,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 4,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 74 over the 20-file limit"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Vercel (edge fra1)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Vercel (edge fra1) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://elk.zone/",
+      "why": "Nuxt PWA with a service worker",
+      "exit": 0,
+      "resolved": "https://elk.zone/",
+      "cdn": "Cloudflare",
+      "assets": 32,
+      "summary": {
+        "fail": 0,
+        "warn": 2,
+        "info": 3,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 12 over the 20-file limit"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.edge-rule-suspected",
+          "severity": "warn",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache, but the headers don't ask it to"
+        }
+      ]
+    },
+    {
+      "url": "https://svelte.dev/",
+      "why": "SvelteKit",
+      "exit": 1,
+      "resolved": "https://svelte.dev/",
+      "cdn": "Vercel",
+      "assets": 30,
+      "summary": {
+        "fail": 1,
+        "warn": 0,
+        "info": 4,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.unhashed-long-cache",
+          "severity": "fail",
+          "title": "1 file without a hash in the name is cached for a day or more"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 10 over the 20-file limit"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Vercel (edge fra1)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Vercel (edge fra1) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://astro.build/",
+      "why": "Astro",
+      "exit": 1,
+      "resolved": "https://astro.build/",
+      "cdn": "Cloudflare",
+      "assets": 7,
+      "summary": {
+        "fail": 1,
+        "warn": 0,
+        "info": 4,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.unhashed-long-cache",
+          "severity": "fail",
+          "title": "2 files without a hash in the name are cached for a day or more"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://docs.astro.build/",
+      "why": "Astro Starlight docs",
+      "exit": 0,
+      "resolved": "https://docs.astro.build/",
+      "cdn": "Cloudflare",
+      "assets": 0,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 4,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "warn",
+          "title": "Browsers reuse the HTML for 60 s without asking"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "The HTML references no scripts or stylesheets"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://ihabkhattab.com/",
+      "why": "Astro on Cloudflare Workers static assets",
+      "exit": 0,
+      "resolved": "https://ihabkhattab.com/",
+      "cdn": "Cloudflare",
+      "assets": 1,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 3,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://vite.dev/",
+      "why": "VitePress on Netlify (the .lean.js false positive in 0.2.1)",
+      "exit": 0,
+      "resolved": "https://vite.dev/",
+      "cdn": "Netlify",
+      "assets": 8,
+      "summary": {
+        "fail": 0,
+        "warn": 0,
+        "info": 3,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Netlify"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Netlify served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://vitepress.dev/",
+      "why": "VitePress",
+      "exit": 0,
+      "resolved": "https://vitepress.dev/",
+      "cdn": "Netlify",
+      "assets": 7,
+      "summary": {
+        "fail": 0,
+        "warn": 0,
+        "info": 4,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Netlify"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Netlify served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://vuejs.org/",
+      "why": "VitePress",
+      "exit": 0,
+      "resolved": "https://vuejs.org/",
+      "cdn": "Netlify",
+      "assets": 12,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 4,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "1 file without a hash in the name"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 2 files on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Netlify"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Netlify served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://docusaurus.io/",
+      "why": "Docusaurus",
+      "exit": 0,
+      "resolved": "https://docusaurus.io/",
+      "cdn": "Cloudflare",
+      "assets": 4,
+      "summary": {
+        "fail": 0,
+        "warn": 3,
+        "info": 3,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "1 file without a hash in the name"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.edge-rule-suspected",
+          "severity": "warn",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache, but the headers don't ask it to"
+        }
+      ]
+    },
+    {
+      "url": "https://jestjs.io/",
+      "why": "Docusaurus",
+      "exit": 0,
+      "resolved": "https://jestjs.io/",
+      "cdn": "Cloudflare",
+      "assets": 3,
+      "summary": {
+        "fail": 0,
+        "warn": 3,
+        "info": 3,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "3 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.edge-rule-suspected",
+          "severity": "warn",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache, but the headers don't ask it to"
+        }
+      ]
+    },
+    {
+      "url": "https://angular.dev/",
+      "why": "Angular",
+      "exit": 1,
+      "resolved": "https://angular.dev/",
+      "cdn": "Fastly",
+      "assets": 14,
+      "summary": {
+        "fail": 1,
+        "warn": 1,
+        "info": 4,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 60 min without asking"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "1 hashed file is cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 2 files on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530051-MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-mrs1530051-MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://remix.run/",
+      "why": "Remix",
+      "exit": 1,
+      "resolved": "https://remix.run/",
+      "cdn": "Fastly",
+      "assets": 115,
+      "summary": {
+        "fail": 1,
+        "warn": 2,
+        "info": 3,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.unhashed-long-cache",
+          "severity": "fail",
+          "title": "20 files without a hash in the name are cached for a day or more"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 95 over the 20-file limit"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530058-MRS)"
+        },
+        {
+          "check": "cdn.edge-rule-suspected",
+          "severity": "warn",
+          "title": "Fastly (edge cache-mrs1530058-MRS) served the HTML from its cache, but the headers don't ask it to"
+        }
+      ]
+    },
+    {
+      "url": "https://reactrouter.com/",
+      "why": "React Router framework mode",
+      "exit": 0,
+      "resolved": "https://reactrouter.com/",
+      "cdn": "Fastly",
+      "assets": 11,
+      "summary": {
+        "fail": 0,
+        "warn": 2,
+        "info": 3,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "warn",
+          "title": "Browsers reuse the HTML for 5 min without asking"
+        },
+        {
+          "check": "html.stale-while-revalidate",
+          "severity": "warn",
+          "title": "After the HTML goes stale, browsers may still show it for up to 7 days"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530029-MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-mrs1530029-MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://www.gatsbyjs.com/",
+      "why": "Gatsby",
+      "exit": 0,
+      "resolved": "https://www.gatsbyjs.com/",
+      "cdn": "Netlify",
+      "assets": 6,
+      "summary": {
+        "fail": 0,
+        "warn": 0,
+        "info": 3,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Netlify"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Netlify served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://qwik.dev/",
+      "why": "Qwik",
+      "exit": 1,
+      "resolved": "https://qwik.dev/",
+      "cdn": "Cloudflare",
+      "assets": 3,
+      "summary": {
+        "fail": 1,
+        "warn": 0,
+        "info": 6,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "page.service-worker",
+          "severity": "info",
+          "title": "The page registers a service worker"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 60 min without asking"
+        },
+        {
+          "check": "assets.no-immutable",
+          "severity": "info",
+          "title": "3 hashed files could add immutable"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 2 files on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://www.solidjs.com/",
+      "why": "Solid",
+      "exit": 0,
+      "resolved": "https://www.solidjs.com/",
+      "cdn": "Cloudflare",
+      "assets": 2,
+      "summary": {
+        "fail": 0,
+        "warn": 2,
+        "info": 3,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "2 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        }
+      ]
+    },
+    {
+      "url": "https://emberjs.com/",
+      "why": "Ember",
+      "exit": 0,
+      "resolved": "https://emberjs.com/",
+      "cdn": "Netlify",
+      "assets": 5,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 3,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "5 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Netlify"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Netlify served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://gohugo.io/",
+      "why": "Hugo",
+      "exit": 2,
+      "error": "Couldn't check https://gohugo.io/: https://gohugo.io/ didn't respond within 10000 ms"
+    },
+    {
+      "url": "https://www.11ty.dev/",
+      "why": "Eleventy",
+      "exit": 0,
+      "resolved": "https://www.11ty.dev/",
+      "cdn": "Vercel",
+      "assets": 3,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 3,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "3 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Vercel (edge fra1)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Vercel (edge fra1) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://jekyllrb.com/",
+      "why": "Jekyll",
+      "exit": 1,
+      "resolved": "https://jekyllrb.com/",
+      "cdn": "Fastly",
+      "assets": 1,
+      "summary": {
+        "fail": 1,
+        "warn": 1,
+        "info": 4,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 10 min without asking"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "1 file without a hash in the name"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530027-MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-mrs1530027-MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://pages.github.com/",
+      "why": "GitHub Pages",
+      "exit": 1,
+      "resolved": "https://pages.github.com/",
+      "cdn": "Fastly",
+      "assets": 3,
+      "summary": {
+        "fail": 1,
+        "warn": 1,
+        "info": 3,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 10 min without asking"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "3 files without a hash in the name"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530062-MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-mrs1530062-MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://docs.python.org/3/",
+      "why": "Sphinx, unhashed static files",
+      "exit": 1,
+      "resolved": "https://docs.python.org/3/",
+      "cdn": "Fastly",
+      "assets": 15,
+      "summary": {
+        "fail": 2,
+        "warn": 2,
+        "info": 4,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.heuristic-freshness",
+          "severity": "fail",
+          "title": "Browsers may reuse the HTML for about 12 min without asking"
+        },
+        {
+          "check": "assets.unhashed-long-cache",
+          "severity": "fail",
+          "title": "1 file without a hash in the name is cached for a day or more"
+        },
+        {
+          "check": "assets.query-version",
+          "severity": "warn",
+          "title": "7 files use a ?version parameter instead of a hash in the name"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "7 files without a hash in the name"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530056-MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-mrs1530056-MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://docs.readthedocs.io/",
+      "why": "Read the Docs hosting",
+      "exit": 1,
+      "resolved": "https://docs.readthedocs.com/platform/stable/",
+      "cdn": "Cloudflare",
+      "assets": 18,
+      "summary": {
+        "fail": 1,
+        "warn": 3,
+        "info": 4,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 30 min without asking"
+        },
+        {
+          "check": "assets.query-version",
+          "severity": "warn",
+          "title": "15 files use a ?version parameter instead of a hash in the name"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "3 files without a hash in the name"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache"
+        },
+        {
+          "check": "cdn.html-edge-lifetime",
+          "severity": "warn",
+          "title": "CDNs may keep the HTML for 30 min"
+        }
+      ]
+    },
+    {
+      "url": "https://rubyonrails.org/",
+      "why": "Rails site",
+      "exit": 1,
+      "resolved": "https://rubyonrails.org/",
+      "cdn": "Fastly",
+      "assets": 1,
+      "summary": {
+        "fail": 1,
+        "warn": 1,
+        "info": 4,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 10 min without asking"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "1 file without a hash in the name"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530039-MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-mrs1530039-MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/",
+      "why": "Rails, assets on a separate domain",
+      "exit": 0,
+      "resolved": "https://github.com/",
+      "assets": 112,
+      "summary": {
+        "fail": 0,
+        "warn": 0,
+        "info": 1,
+        "pass": 4
+      },
+      "findings": [
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 92 over the 20-file limit"
+        }
+      ]
+    },
+    {
+      "url": "https://www.djangoproject.com/",
+      "why": "Django",
+      "exit": 0,
+      "resolved": "https://www.djangoproject.com/",
+      "cdn": "Fastly",
+      "assets": 4,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 5,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "warn",
+          "title": "Browsers reuse the HTML for 5 min without asking"
+        },
+        {
+          "check": "assets.no-immutable",
+          "severity": "info",
+          "title": "4 hashed files could add immutable"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-lin1730052-LIN)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-lin1730052-LIN) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://laravel.com/",
+      "why": "Laravel",
+      "exit": 0,
+      "resolved": "https://laravel.com/",
+      "cdn": "Cloudflare",
+      "assets": 5,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 5,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.heuristic-freshness",
+          "severity": "info",
+          "title": "The HTML has no caching headers at all"
+        },
+        {
+          "check": "assets.no-immutable",
+          "severity": "info",
+          "title": "5 hashed files could add immutable"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 5 files on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.html-edge-lifetime",
+          "severity": "warn",
+          "title": "CDNs may keep the HTML for 24 hours"
+        }
+      ]
+    },
+    {
+      "url": "https://wordpress.org/",
+      "why": "WordPress, ?ver= query versioning",
+      "exit": 0,
+      "resolved": "https://wordpress.org/",
+      "assets": 14,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 3,
+        "pass": 0
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.heuristic-freshness",
+          "severity": "info",
+          "title": "The HTML has no caching headers at all"
+        },
+        {
+          "check": "assets.query-version",
+          "severity": "warn",
+          "title": "14 files use a ?version parameter instead of a hash in the name"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        }
+      ]
+    },
+    {
+      "url": "https://www.wikipedia.org/",
+      "why": "Wikimedia's own CDN",
+      "exit": 1,
+      "resolved": "https://www.wikipedia.org/",
+      "assets": 2,
+      "summary": {
+        "fail": 1,
+        "warn": 2,
+        "info": 2,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 60 min without asking"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "2 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "a CDN served the HTML from its cache"
+        },
+        {
+          "check": "cdn.html-edge-lifetime",
+          "severity": "warn",
+          "title": "CDNs may keep the HTML for 24 hours"
+        }
+      ]
+    },
+    {
+      "url": "https://www.python.org/",
+      "why": "Fastly",
+      "exit": 1,
+      "resolved": "https://www.python.org/",
+      "cdn": "Fastly",
+      "assets": 8,
+      "summary": {
+        "fail": 1,
+        "warn": 2,
+        "info": 4,
+        "pass": 0
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.heuristic-freshness",
+          "severity": "info",
+          "title": "The HTML has no caching headers at all"
+        },
+        {
+          "check": "assets.unhashed-long-cache",
+          "severity": "fail",
+          "title": "4 files without a hash in the name are cached for a day or more"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "4 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 3 files on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530048-MRS)"
+        },
+        {
+          "check": "cdn.edge-rule-suspected",
+          "severity": "warn",
+          "title": "Fastly (edge cache-mrs1530048-MRS) served the HTML from its cache, but the headers don't ask it to"
+        }
+      ]
+    },
+    {
+      "url": "https://www.fastly.com/",
+      "why": "Fastly",
+      "exit": 0,
+      "resolved": "https://www.fastly.com/",
+      "cdn": "Fastly",
+      "assets": 15,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 3,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.no-immutable",
+          "severity": "info",
+          "title": "15 hashed files could add immutable"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530038-MRS)"
+        },
+        {
+          "check": "cdn.edge-rule-suspected",
+          "severity": "warn",
+          "title": "Fastly (edge cache-mrs1530038-MRS) served the HTML from its cache, but the headers don't ask it to"
+        }
+      ]
+    },
+    {
+      "url": "https://www.theguardian.com/",
+      "why": "Fastly, news site",
+      "exit": 0,
+      "resolved": "https://www.theguardian.com/international",
+      "assets": 0,
+      "summary": {
+        "fail": 0,
+        "warn": 2,
+        "info": 2,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "warn",
+          "title": "Browsers reuse the HTML for 60 s without asking"
+        },
+        {
+          "check": "html.stale-while-revalidate",
+          "severity": "warn",
+          "title": "After the HTML goes stale, browsers may still show it for up to 6 s"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "No scripts or stylesheets were checked: all 5 are on other origins"
+        }
+      ]
+    },
+    {
+      "url": "https://www.cloudflare.com/",
+      "why": "Cloudflare zone cache",
+      "exit": 0,
+      "resolved": "https://www.cloudflare.com/",
+      "cdn": "Cloudflare",
+      "assets": 8,
+      "summary": {
+        "fail": 0,
+        "warn": 3,
+        "info": 4,
+        "pass": 0
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "warn",
+          "title": "Browsers reuse the HTML for 10 s without asking"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "1 file without a hash in the name"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "1 hashed file is cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://developers.cloudflare.com/",
+      "why": "Cloudflare Pages / Workers",
+      "exit": 0,
+      "resolved": "https://developers.cloudflare.com/",
+      "cdn": "Cloudflare",
+      "assets": 10,
+      "summary": {
+        "fail": 0,
+        "warn": 3,
+        "info": 4,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "1 file without a hash in the name"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "9 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 2 files on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://www.netlify.com/",
+      "why": "Netlify",
+      "exit": 0,
+      "resolved": "https://www.netlify.com/",
+      "cdn": "Netlify",
+      "assets": 15,
+      "summary": {
+        "fail": 0,
+        "warn": 2,
+        "info": 4,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "1 file without a hash in the name"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "14 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 4 files on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Netlify"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Netlify served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://docs.aws.amazon.com/",
+      "why": "CloudFront",
+      "exit": 0,
+      "resolved": "https://docs.aws.amazon.com/",
+      "cdn": "CloudFront",
+      "assets": 1,
+      "summary": {
+        "fail": 0,
+        "warn": 2,
+        "info": 4,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "warn",
+          "title": "Browsers reuse the HTML for 5 min without asking"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "1 hashed file is cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through CloudFront (edge CAI50-P2)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "CloudFront (edge CAI50-P2) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://aws.amazon.com/",
+      "why": "CloudFront",
+      "exit": 1,
+      "resolved": "https://aws.amazon.com/",
+      "cdn": "CloudFront",
+      "assets": 0,
+      "summary": {
+        "fail": 1,
+        "warn": 0,
+        "info": 3,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.heuristic-freshness",
+          "severity": "fail",
+          "title": "Browsers may reuse the HTML for about 4.6 hours without asking"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "No scripts or stylesheets were checked: all 23 are on other origins"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through CloudFront (edge CAI50-P3)"
+        }
+      ]
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/",
+      "why": "MDN",
+      "exit": 1,
+      "resolved": "https://developer.mozilla.org/en-US/",
+      "cdn": "Fastly",
+      "assets": 25,
+      "summary": {
+        "fail": 1,
+        "warn": 0,
+        "info": 5,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 60 min without asking"
+        },
+        {
+          "check": "assets.no-immutable",
+          "severity": "info",
+          "title": "20 hashed files could add immutable"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 5 over the 20-file limit"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-lin1730043-LIN)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-lin1730043-LIN) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://web.dev/",
+      "why": "Google hosting",
+      "exit": 0,
+      "resolved": "https://web.dev/?hl=es-419",
+      "assets": 0,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 2,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.revalidation",
+          "severity": "warn",
+          "title": "Revalidating the HTML downloads it again instead of returning 304"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "No scripts or stylesheets were checked: all 4 are on other origins"
+        }
+      ]
+    },
+    {
+      "url": "https://go.dev/",
+      "why": "Google App Engine",
+      "exit": 0,
+      "resolved": "https://go.dev/",
+      "assets": 11,
+      "summary": {
+        "fail": 0,
+        "warn": 2,
+        "info": 3,
+        "pass": 0
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.heuristic-freshness",
+          "severity": "info",
+          "title": "The HTML has no caching headers at all"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "10 files without a hash in the name"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "1 hashed file is cached for less than 30 days"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 1 file on other origins"
+        }
+      ]
+    },
+    {
+      "url": "https://www.rust-lang.org/",
+      "why": "Rust site",
+      "exit": 1,
+      "resolved": "https://rust-lang.org/",
+      "cdn": "Fastly",
+      "assets": 7,
+      "summary": {
+        "fail": 1,
+        "warn": 2,
+        "info": 3,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 10 min without asking"
+        },
+        {
+          "check": "assets.unhashed",
+          "severity": "warn",
+          "title": "4 files without a hash in the name"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "3 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Fastly (edge cache-mrs1530077-MRS)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Fastly (edge cache-mrs1530077-MRS) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://nodejs.org/en",
+      "why": "Next.js, Node.js site",
+      "exit": 0,
+      "resolved": "https://nodejs.org/en",
+      "cdn": "Cloudflare",
+      "assets": 23,
+      "summary": {
+        "fail": 0,
+        "warn": 2,
+        "info": 3,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.not-checked",
+          "severity": "info",
+          "title": "Skipped 3 over the 20-file limit"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        },
+        {
+          "check": "cdn.edge-rule-suspected",
+          "severity": "warn",
+          "title": "Cloudflare (edge MRS) served the HTML from its cache, but the headers don't ask it to"
+        }
+      ]
+    },
+    {
+      "url": "https://excalidraw.com/",
+      "why": "Vite PWA with a service worker",
+      "exit": 0,
+      "resolved": "https://excalidraw.com/",
+      "cdn": "Vercel",
+      "assets": 3,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 2,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "3 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Vercel (edge fra1)"
+        },
+        {
+          "check": "cdn.html-from-edge",
+          "severity": "info",
+          "title": "Vercel (edge fra1) served the HTML from its cache"
+        }
+      ]
+    },
+    {
+      "url": "https://squoosh.app/",
+      "why": "PWA with a service worker",
+      "exit": 2,
+      "error": "Couldn't check https://squoosh.app/: https://squoosh.app/ didn't respond within 10000 ms"
+    },
+    {
+      "url": "https://news.ycombinator.com/",
+      "why": "Server-rendered, minimal assets",
+      "exit": 1,
+      "resolved": "https://news.ycombinator.com/",
+      "assets": 2,
+      "summary": {
+        "fail": 1,
+        "warn": 1,
+        "info": 1,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "warn",
+          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+        },
+        {
+          "check": "assets.unhashed-long-cache",
+          "severity": "fail",
+          "title": "2 files without a hash in the name are cached for a day or more"
+        }
+      ]
+    }
+  ]
+}

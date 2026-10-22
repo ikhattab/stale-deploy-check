@@ -157,6 +157,7 @@ packages/core   fetch-only checks that return findings; runs in Node, Workers, a
 packages/cli    the stale-deploy-check command
 skills/         the agent skill
 evals/          the skill's test prompts and two example repos
+calibration/    runs the CLI against 50 real sites and compares versions
 ```
 
 - [docs/checks.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/checks.md): every check, what triggers it, and where the article explains it

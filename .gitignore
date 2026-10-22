@@ -5,3 +5,5 @@ evals/workspace/
 packages/cli/README.md
 packages/cli/LICENSE
 *.tgz
+calibration/reports/
+calibration/results/local.json
