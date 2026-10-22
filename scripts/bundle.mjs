@@ -1,5 +1,6 @@
 // Bundles the CLI and core (with htmlparser2) into one file, so the published package has no dependencies,
-// and the browser probe into a console snippet.
+// the browser probe into a console snippet, and the browser extension.
+import { cpSync } from "node:fs";
 import { build } from "esbuild";
 
 await build({
@@ -28,3 +29,18 @@ await build({
   legalComments: "none",
   logLevel: "warning",
 });
+
+// The extension, ready to load unpacked or zip for the store: the popup, the script it injects into the tab,
+// and the static files. Not minified, so a store reviewer can read it.
+await build({
+  entryPoints: { popup: "packages/extension/src/popup.ts", collect: "packages/extension/src/collect.ts" },
+  outdir: "packages/extension/dist/chrome",
+  bundle: true,
+  platform: "browser",
+  format: "iife",
+  target: "chrome116",
+  conditions: ["source"],
+  legalComments: "none",
+  logLevel: "warning",
+});
+cpSync("packages/extension/static", "packages/extension/dist/chrome", { recursive: true });

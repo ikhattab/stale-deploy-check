@@ -113,7 +113,8 @@ async function cachedPages(url: string): Promise<CachedPage[]> {
   return found;
 }
 
-function readPage(html: string, url: string): { buildId?: BuildId; assets: string[] } {
+/** Reads a fetched HTML page with DOMParser: its build id and its scripts and stylesheets. */
+export function readPage(html: string, url: string): { buildId?: BuildId; assets: string[] } {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const buildId = buildIdOf(doc);
   const base = doc.querySelector("base[href]")?.getAttribute("href");

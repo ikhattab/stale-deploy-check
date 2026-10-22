@@ -1,0 +1,146 @@
+:root {
+  color-scheme: light dark;
+  --bg: #fff;
+  --fg: #1f1f1f;
+  --muted: #5f6368;
+  --border: #dadce0;
+  --fail: #c5221f;
+  --warn: #b06000;
+  --pass: #188038;
+  --accent: #1a73e8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #202124;
+    --fg: #e8eaed;
+    --muted: #9aa0a6;
+    --border: #3c4043;
+    --fail: #f28b82;
+    --warn: #fdd663;
+    --pass: #81c995;
+    --accent: #8ab4f8;
+  }
+}
+
+body {
+  width: 420px;
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.45 system-ui, sans-serif;
+}
+
+header {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+#page {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#summary {
+  margin: 8px 0;
+  font-weight: 600;
+}
+
+#findings {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#findings > li {
+  border-top: 1px solid var(--border);
+}
+
+summary {
+  display: flex;
+  gap: 8px;
+  padding: 7px 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+.mark {
+  flex: none;
+  width: 1ch;
+  font-weight: 700;
+  text-align: center;
+}
+
+.fail .mark,
+.fail summary {
+  color: var(--fail);
+}
+
+.warn .mark,
+.warn summary {
+  color: var(--warn);
+}
+
+.pass .mark {
+  color: var(--pass);
+}
+
+.info .mark {
+  color: var(--muted);
+}
+
+.fail summary,
+.warn summary {
+  font-weight: 600;
+}
+
+details > :not(summary) {
+  margin: 0 0 8px calc(1ch + 8px);
+}
+
+.evidence {
+  padding: 0;
+  color: var(--muted);
+  font: 11px/1.4 ui-monospace, monospace;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+details > a {
+  display: inline-block;
+  color: var(--accent);
+}
+
+footer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+button {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#status {
+  color: var(--muted);
+}

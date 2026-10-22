@@ -29,7 +29,7 @@ export function printReport(report: TabReport, out: Out = console): void {
 }
 
 /** The tab.build verdict first, then by severity. */
-function ordered(findings: Finding[]): Finding[] {
+export function ordered(findings: Finding[]): Finding[] {
   return [...findings].sort((a, b) => Number(b.check === "tab.build") - Number(a.check === "tab.build") || SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
 }
 
