@@ -66,8 +66,14 @@ describe("hasContentHash", () => {
     "/static/js/main.8b1e07ab.chunk.js",
     "/_next/static/immutable/chunks/1omje2kalxx-o.css",
     "/_next/static/immutable/chunks/2j9_bme65_mpx.js",
+    // VitePress: the hash sits between the page name and a .lean suffix.
+    "/assets/index.md.DNpnSOya.lean.js",
+    "/assets/chunks/framework.B29EMeTV.js",
+    "/js/polyfills-es2015.4f2c9a1b.js",
+    // Vite's base64url hashes can contain a dash.
+    "/assets/index-Bq-xKzWe.js",
   ];
-  const unhashed = ["/app.js", "/app.bundle.js", "/framework-polyfills.js", "/assets/vendor.min.js", "/static/runtime.js", "/main.mjs?v=42", "/rum.js", "/vendors-node_modules_react.js"];
+  const unhashed = ["/app.js", "/app.bundle.js", "/framework-polyfills.js", "/assets/vendor.min.js", "/static/runtime.js", "/main.mjs?v=42", "/rum.js", "/vendors-node_modules_react.js", "/es2015-polyfills.js", "/polyfills-es2015.js", "/app-v2.js", "/guide.md.lean.js", "/js/chunk-vendors-2.js"];
 
   for (const path of hashed) test(`hashed: ${path}`, () => assert.ok(hasContentHash(`https://example.com${path}`)));
   for (const path of unhashed) test(`not hashed: ${path}`, () => assert.ok(!hasContentHash(`https://example.com${path}`)));
