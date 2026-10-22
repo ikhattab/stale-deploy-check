@@ -66,15 +66,15 @@
       "id": 4,
       "name": "ci-check-vite-s3",
       "prompt": "can you add a step to our deploy workflow that fails the build when a deploy could leave users stuck on an old version? prod is https://admin.acme.example/",
-      "expected_output": "Adds a step after the S3 upload and CloudFront invalidation in .github/workflows/deploy.yml that runs a pinned stale-deploy-check against the prod URL, keeps each report between runs (a cache or artifact), and passes the previous one as --baseline. Warns that with today's `aws s3 sync --delete` the new step will fail from the second deploy (assets.previous-removed), and that `max-age=3600` on index.html fails html.max-age, so the user knows the step will go red until those are fixed. Doesn't turn on --strict without asking.",
+      "expected_output": "Adds a step after the S3 upload and CloudFront invalidation in .github/workflows/deploy.yml that checks the prod URL with the ikhattab/stale-deploy-check action (or a pinned CLI that keeps each report between runs and passes the previous one as --baseline). Warns that with today's `aws s3 sync --delete` the new step will fail from the second deploy (assets.previous-removed), and that `max-age=3600` on index.html fails html.max-age, so the user knows the step will go red until those are fixed. Doesn't turn on --strict without asking.",
       "files": [
         "fixtures/vite-s3-dashboard/"
       ],
       "expectations": [
         "Edits .github/workflows/deploy.yml, adding the check after the upload and invalidation steps, not before",
-        "Runs the CLI against the production URL with a pinned version (stale-deploy-check@<major>.<minor> or an exact version)",
-        "Keeps each run's report (cache, artifact, or bucket) and passes the previous one with --baseline",
-        "Saves the report even when the check step fails (if: always() or equivalent), so the next run still has a baseline",
+        "Checks the production URL with a pinned version: the ikhattab/stale-deploy-check action at a version tag, or the CLI as stale-deploy-check@<major>.<minor> or an exact version",
+        "Compares each deploy with the previous one: the action (which does this by default), or keeping each report (cache, artifact, or bucket) and passing the previous one with --baseline",
+        "Keeps the report even when the check fails, so the next run still has a baseline: the action does this, or a save step with if: always() or equivalent",
         "Warns that aws s3 sync --delete will make the check fail from the second deploy on, because the old chunks are deleted, and names the fix",
         "Warns that --cache-control 'public, max-age=3600' applies to index.html, so the check will fail on the HTML's lifetime until that changes",
         "Doesn't add --strict without asking",

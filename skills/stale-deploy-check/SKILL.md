@@ -114,12 +114,25 @@ If the user wants the report as a file (for CI or an issue), write the combined 
 
 ## Setting it up in CI
 
-If the user wants these problems caught on every deploy, add a step after the production deploy that runs the CLI and keeps each report for the next run's `--baseline`. Adapt the GitHub Actions example in the [README](https://github.com/ikhattab/stale-deploy-check#in-ci) to their CI and deploy URL:
+If the user wants these problems caught on every deploy, add a step after the production deploy.
 
-- Run it after the deploy finishes, against the URL users load, not a build directory.
-- Keep the report between runs (a cache, an artifact, a bucket) and pass it back with `--baseline`. Without that, the step can't see deleted assets.
-- Pin the version (`stale-deploy-check@<major>.<minor>`), since findings can change between minor versions before 1.0.
-- Add `--asset-origin` for an asset domain you found (see "Assets on another origin"), and `--ignore` for findings the user has decided to accept, rather than leaving the step out.
-- Exit 1 fails the job on a `fail`. Ask whether they want `--strict` to fail on warnings too. Most don't at first.
+On GitHub Actions, use the action. It keeps each report in the Actions cache and compares the next run with it, so it catches deleted assets without any extra steps:
+
+```yaml
+- uses: ikhattab/stale-deploy-check@v0
+  with:
+    url: https://example.com/
+    # asset-origins: https://assets.example.com    (one per line)
+    # ignore: html.no-validator                     (one per line)
+```
+
+On other CI, run the CLI with `--out`, keep the report somewhere that outlives the job (a cache, an artifact, a bucket), and pass it back with `--baseline` next time. Without that, the step can't see deleted assets. Pin the version (`stale-deploy-check@<major>.<minor>`), since findings can change between minor versions before 1.0.
+
+Either way:
+
+- Run it after the deploy finishes, against the URL users load, not a build directory. If the deploy invalidates a CDN, put the step after the invalidation.
+- Add an asset origin for an asset domain you found (see "Assets on another origin"), and ignore findings the user has decided to accept, rather than leaving the step out.
+- A fail fails the job. Ask whether they want strict mode to fail on warnings too. Most don't at first.
+- The step runs after the deploy is live, so it's an alarm, not a gate. If they want a gate, point the same step at a preview or staging URL before the production deploy.
 
 If they asked you to add it, add it. If they only asked whether it's possible, show the change and let them decide. Either way, say which current findings will make the new step fail right away, so a red first run isn't a surprise.

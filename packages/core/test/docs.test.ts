@@ -18,6 +18,13 @@ test("every CLI check id is documented in docs/checks.md", async () => {
   }
 });
 
+test("action.yml runs the current minor version from npm", async () => {
+  const { version } = JSON.parse(await read("packages/cli/package.json"));
+  const action = await read("action.yml");
+  const pinned = /\n {2}version:\n(?: {4}.*\n)*? {4}default: "([^"]+)"/.exec(action)?.[1];
+  assert.equal(pinned, version.split(".").slice(0, 2).join("."));
+});
+
 test("every skill check id is in docs/checks.md", async () => {
   const checks = await read("docs/checks.md");
   const skill = await read("skills/stale-deploy-check/references/code-checks.md");

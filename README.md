@@ -74,34 +74,36 @@ It makes a handful of requests per run: the page, a conditional request for it, 
 
 ### In CI
 
-Run it after each production deploy. Saving each report and passing the previous one as `--baseline` catches the blank-screen problem: a deploy that deletes the files that tabs opened before it still need.
+Run it after each production deploy. On GitHub Actions, add a step after the deploy:
 
 ```yaml
-# .github/workflows/deploy.yml, after the deploy step
-- name: Restore the previous deploy's report
-  uses: actions/cache/restore@v4
+- uses: ikhattab/stale-deploy-check@v0
   with:
-    path: stale-deploy-report.json
-    key: stale-deploy-report-${{ github.run_id }}
-    restore-keys: stale-deploy-report-
-
-- name: Check for stale deploys
-  run: |
-    if [ -f stale-deploy-report.json ]; then
-      mv stale-deploy-report.json previous-report.json
-      baseline="--baseline previous-report.json"
-    fi
-    npx -y stale-deploy-check@0.3 "https://example.com/" $baseline --out stale-deploy-report.json
-
-- name: Save this deploy's report
-  if: always()
-  uses: actions/cache/save@v4
-  with:
-    path: stale-deploy-report.json
-    key: stale-deploy-report-${{ github.run_id }}
+    url: https://example.com/
 ```
 
-Pin the version while the project is pre-1.0, since findings can change between minor versions. If a finding doesn't apply to your site, `--ignore` it by id rather than dropping the step.
+The step fails when a deploy can leave users on an old version, and the report goes in the job summary. It keeps each run's report in the Actions cache and compares the next run with it, which catches the blank-screen problem: a deploy that deletes the files that tabs opened before it still need. The first run has nothing to compare with, so that part starts from the second.
+
+| Input | What it does |
+| --- | --- |
+| `url` | The page users load. Required. |
+| `asset-origins` | Other origins that serve your files, one per line (`--asset-origin`) |
+| `ignore` | Check ids to ignore, one per line |
+| `strict` | `true` to fail on warnings too |
+| `baseline` | `false` to skip keeping reports between runs |
+| `version` | The CLI version to run from npm (default: the action's own minor version) |
+
+Outputs: `exit-code` (0, 1 or 2), `report` (the JSON report's path), and `compared` (whether this run was compared with the previous one).
+
+The step runs after the deploy, so a red job means the deploy is already live: it's an alarm, not a gate. To block a deploy, run the same step against a preview or staging URL on the same host first.
+
+**Other CI systems.** Save each report with `--out` and pass the previous one back with `--baseline`:
+
+```sh
+npx -y stale-deploy-check@0.3 https://example.com/ --baseline previous-report.json --out report.json
+```
+
+Keep `report.json` somewhere that outlives the job (a cache, an artifact, a bucket) and restore it as `previous-report.json` next time. Pin the version while the project is pre-1.0, since findings can change between minor versions. If a finding doesn't apply to your site, `--ignore` it by id rather than dropping the step.
 
 ### What it can't see
 
@@ -158,6 +160,7 @@ packages/cli    the stale-deploy-check command
 skills/         the agent skill
 evals/          the skill's test prompts and two example repos
 calibration/    runs the CLI against 50 real sites and compares versions
+action.yml      the GitHub Action; action/check.sh does the work, and CI runs it against the test server
 ```
 
 - [docs/checks.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/checks.md): every check, what triggers it, and where the article explains it

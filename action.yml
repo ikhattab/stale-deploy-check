@@ -1,0 +1,91 @@
+name: Stale deploy check
+description: Fail the build when a deploy can leave users on an old version of your site.
+author: Ihab Khattab
+branding:
+  icon: refresh-cw
+  color: orange
+
+inputs:
+  url:
+    description: The page users load, checked after the deploy finishes. Usually the production URL.
+    required: true
+  asset-origins:
+    description: Other origins that serve your site's files, like an asset domain or a CDN distribution. One per line.
+    default: ""
+  ignore:
+    description: Check ids to ignore, one per line.
+    default: ""
+  strict:
+    description: Fail on warnings too, not only on failures.
+    default: "false"
+  baseline:
+    description: Keep each report in the Actions cache and compare the next run with it, so a deploy that deletes files open tabs still need fails.
+    default: "true"
+  version:
+    description: The stale-deploy-check version to run from npm.
+    default: "0.3"
+  command:
+    description: Run this command instead of the npm package. For testing the action itself.
+    default: ""
+
+outputs:
+  exit-code:
+    description: 0 if nothing failed, 1 if something did, 2 if the check couldn't run.
+    value: ${{ steps.check.outputs.exit-code }}
+  report:
+    description: Path to this run's JSON report, when the check ran.
+    value: ${{ steps.check.outputs.report }}
+  compared:
+    description: true when the run was compared with the previous run's report.
+    value: ${{ steps.check.outputs.compared }}
+
+runs:
+  using: composite
+  steps:
+    # One cache entry per run, found again through the prefix, which is per URL.
+    - id: key
+      shell: bash
+      env:
+        URL: ${{ inputs.url }}
+        RUN: ${{ github.run_id }}-${{ github.run_attempt }}
+      run: |
+        echo "prefix=stale-deploy-check-$(printf %s "$URL" | sha256sum | cut -c1-16)-" >> "$GITHUB_OUTPUT"
+        echo "suffix=$RUN-$(date +%s%N)" >> "$GITHUB_OUTPUT"
+
+    - if: inputs.baseline == 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: .stale-deploy-check/report.json
+        key: ${{ steps.key.outputs.prefix }}${{ steps.key.outputs.suffix }}
+        restore-keys: ${{ steps.key.outputs.prefix }}
+
+    - id: check
+      shell: bash
+      env:
+        INPUT_URL: ${{ inputs.url }}
+        INPUT_ASSET_ORIGINS: ${{ inputs.asset-origins }}
+        INPUT_IGNORE: ${{ inputs.ignore }}
+        INPUT_STRICT: ${{ inputs.strict }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_COMMAND: ${{ inputs.command }}
+      run: bash "$GITHUB_ACTION_PATH/action/check.sh"
+
+    # Saved even when the check fails, so the next run still has this deploy to compare with.
+    - if: always() && inputs.baseline == 'true' && steps.check.outputs.report != ''
+      uses: actions/cache/save@v4
+      with:
+        path: .stale-deploy-check/report.json
+        key: ${{ steps.key.outputs.prefix }}${{ steps.key.outputs.suffix }}
+
+    - if: steps.check.outputs.exit-code != '0'
+      shell: bash
+      env:
+        CODE: ${{ steps.check.outputs.exit-code }}
+      run: |
+        if [[ "$CODE" == "1" ]]; then
+          echo "::error title=Stale deploy check::This deploy can leave users on an old version. The report is in the step above and in the job summary."
+        else
+          echo "::error title=Stale deploy check::The check couldn't run (exit $CODE). See the step above."
+        fi
+        exit 1
