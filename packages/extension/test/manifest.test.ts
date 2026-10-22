@@ -17,6 +17,17 @@ test("the extension asks for activeTab and scripting, and nothing else", async (
   for (const key of ["host_permissions", "optional_host_permissions", "content_scripts", "background"]) assert.equal(manifest[key], undefined, key);
 });
 
+test("every icon the manifest names is in static/, at its size", async () => {
+  const manifest = await json("packages/extension/static/manifest.json");
+  const icons = { ...manifest.icons, ...manifest.action.default_icon };
+  assert.ok(icons["128"], "the store needs a 128 px icon");
+  for (const [size, path] of Object.entries(icons) as [string, string][]) {
+    const png = await readFile(new URL(`packages/extension/static/${path}`, root));
+    // A PNG's width and height are big-endian integers at bytes 16 and 20.
+    assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [Number(size), Number(size)], path);
+  }
+});
+
 test("the popup loads only files the build writes", async () => {
   const html = await readFile(new URL("packages/extension/static/popup.html", root), "utf8");
   const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1]);
