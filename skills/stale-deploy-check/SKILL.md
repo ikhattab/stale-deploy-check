@@ -1,6 +1,6 @@
 ---
 name: stale-deploy-check
-description: Diagnose why users still see an old version of a web app after a deploy, by checking the live site's cache headers and CDN with the stale-deploy-check CLI and then reading the repo for the parts HTTP can't show (host header config, asset deletion on deploy, failed dynamic imports in long-lived tabs, service worker update flow). Use this whenever someone says users see the old version, a deploy "didn't go out" for some users, people need a hard refresh, a CDN serves stale HTML, there's a blank screen or "Failed to fetch dynamically imported module" / ChunkLoadError after deploys, a service worker won't update, or they want their caching headers reviewed before or after shipping, even if they never mention caching.
+description: Diagnose why users still see an old version of a web app after a deploy, by checking the live site's cache headers and CDN with the stale-deploy-check CLI and then reading the repo for the parts HTTP can't show (host header config, asset deletion on deploy, failed dynamic imports in long-lived tabs, service worker update flow). Use this whenever someone says users see the old version, a deploy "didn't go out" for some users, people need a hard refresh, a CDN serves stale HTML, there's a blank screen or "Failed to fetch dynamically imported module" / ChunkLoadError after deploys, a service worker won't update, they want their caching headers reviewed before or after shipping, or they want a check in CI that catches these problems, even if they never mention caching.
 ---
 
 # Stale deploy check
@@ -35,7 +35,26 @@ Read the JSON. Its findings follow the format in `references/findings-format.md`
 - `cdn.detected`: which CDN or platform, which decides which config files matter
 - `cdn.edge-rule-suspected`, `cdn.html-edge-lifetime`: these make `code.cdn-purge` worth checking
 - `page.service-worker`: the page registers one, so the service worker checks matter even if you can't find the file at first
+- `assets.not-checked` naming another origin: see "Assets on another origin" below
 - `assets.previous-removed`: only present with `--baseline`. If the user has a previous report, pass it.
+
+### Assets on another origin
+
+The CLI only checks the site's own files: the page's origin and subdomains of its host. If `assets.not-checked` says files were skipped on another origin, find out whether that origin is the site's own asset host before trusting the asset findings. Look for an asset prefix in the build config (Vite `base` or `experimental.renderBuiltUrl`, Next.js `assetPrefix`, webpack `output.publicPath`, CRA `PUBLIC_URL`, Astro `build.assetsPrefix`) or an upload to a separate bucket or CDN in the deploy script. If the build points there, rerun with `--asset-origin <origin>` and use that report. Never add origins that only serve third-party code (analytics, fonts, a library CDN). They aren't part of the deploy.
+
+`--asset-origin` arrived in 0.3. If the CLI rejects it as an unknown option, it's an older copy: say the asset domain wasn't checked, and mention that a newer CLI can check it.
+
+### A before-and-after baseline
+
+`--baseline` is the only way to see from outside whether a deploy deleted files that open tabs still need. If the user is about to deploy, offer to save a report now and compare after:
+
+```sh
+<cli> <url> --out "${TMPDIR:-/tmp}/stale-deploy-before.json"
+# after the deploy finishes
+<cli> <url> --baseline "${TMPDIR:-/tmp}/stale-deploy-before.json" --json
+```
+
+`assets.previous-removed` then answers `code.asset-retention` for real. Only the asset URLs that changed are requested, so an unchanged build reports `assets.previous-kept` with nothing to check.
 
 ## 3. Learn the repo
 
@@ -92,3 +111,15 @@ End with what you couldn't check and why, for example "users' browsers: what's a
 Don't edit code unless the user asks. When they do, make the smallest change that fixes the finding, and rerun the CLI against a preview deploy if one exists, so the fix is checked against real headers.
 
 If the user wants the report as a file (for CI or an issue), write the combined findings as JSON in the CLI's report format, with your findings using `"source": "code"` and `file` evidence.
+
+## Setting it up in CI
+
+If the user wants these problems caught on every deploy, add a step after the production deploy that runs the CLI and keeps each report for the next run's `--baseline`. Adapt the GitHub Actions example in the [README](https://github.com/ikhattab/stale-deploy-check#in-ci) to their CI and deploy URL:
+
+- Run it after the deploy finishes, against the URL users load, not a build directory.
+- Keep the report between runs (a cache, an artifact, a bucket) and pass it back with `--baseline`. Without that, the step can't see deleted assets.
+- Pin the version (`stale-deploy-check@<major>.<minor>`), since findings can change between minor versions before 1.0.
+- Add `--asset-origin` for an asset domain you found (see "Assets on another origin"), and `--ignore` for findings the user has decided to accept, rather than leaving the step out.
+- Exit 1 fails the job on a `fail`. Ask whether they want `--strict` to fail on warnings too. Most don't at first.
+
+If they asked you to add it, add it. If they only asked whether it's possible, show the change and let them decide. Either way, say which current findings will make the new step fail right away, so a red first run isn't a surprise.
