@@ -23,7 +23,7 @@ inputs:
     default: "true"
   version:
     description: The stale-deploy-check version to run from npm.
-    default: "0.4"
+    default: "0.5"
   command:
     description: Run this command instead of the npm package. For testing the action itself.
     default: ""
