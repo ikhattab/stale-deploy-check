@@ -18,6 +18,21 @@ Run both at the same time so a difference comes from the tool, not from a site t
 
 Before a release, read the diff and check each change against the headers in `reports/`. Every wrong call becomes a test in `packages/core/test/`, and the release's results replace the committed baseline.
 
+## Review: 0.3.4 → working tree (`assets.missing-cached`), 2026-10-22
+
+The new probe warned on 15 sites. Each was checked against the probe's headers, and each is right:
+
+| Kept for | Sites |
+| --- | --- |
+| a year or more, `immutable` 404 | vite.dev, vitepress.dev, vuejs.org (Netlify `/assets/*` rule), nuxt.com, vercel.com, elk.zone, docusaurus.io (`max-age=365000000`) |
+| a year, `index.html` served as CSS | angular.dev |
+| 7 days, `immutable` 404 | developers.cloudflare.com (the same Cloudflare static-assets `_headers` rule ihabkhattab.com had) |
+| 4 hours | jestjs.io, tailwindcss.com (404); solidjs.com (`index.html` served as JS) |
+| about an hour, guessed from `Last-Modified` | excalidraw.com (`index.html` served as JS, `s-maxage=0` only) |
+| 10 to 20 min | wikipedia.org (`s-maxage=600` at the CDN), docs.readthedocs.io (`max-age=1200`) |
+
+It's a warn, not a fail: it takes a race or a rollback to hit, and failing would have turned 9 of these green CI runs red. Everything else matched 0.3.4.
+
 ## Review: 0.3.1 → working tree, 2026-10-22
 
 Fixed, all false calls found by the first run:
