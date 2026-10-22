@@ -162,7 +162,9 @@ async function revalidate(recorder: Recorder, doc: RequestRecord): Promise<Reque
 
 async function headOrGet(recorder: Recorder, url: string): Promise<RequestRecord> {
   const head = await recorder.request(url, { method: "HEAD" });
-  if (head.final.status !== 405 && head.final.status !== 501) return head.final;
+  // Some servers reject HEAD (405, 501), and some answer it with an error for a file GET serves, like
+  // Cloudflare Zaraz's /static/z/i.js: 404 to HEAD, 200 to GET. An error only counts if GET gets it too.
+  if (head.final.status < 400) return head.final;
   return (await recorder.request(url, { method: "GET" })).final;
 }
 

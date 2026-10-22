@@ -8,9 +8,9 @@ Section links point at the article: [Q2](https://ihabkhattab.com/blog/deployed-b
 
 1. `GET <url>` with `Accept: text/html`, no cookies, following redirects (each hop recorded). Anything other than a 2xx HTML response ends the run with exit 2.
 2. Parse the HTML for `<script src>`, `<link rel="stylesheet">` and `<link rel="modulepreload">` on the site's own origins: the page's origin, subdomains of its host (`static.example.com` for `www.example.com`), and any `--asset-origin`. Cap at 20 assets (`--max-assets`); say so if there were more.
-3. `HEAD` each asset, falling back to `GET` if the server rejects `HEAD`.
+3. `HEAD` each asset. Any error status is checked again with `GET`: some servers reject `HEAD` (405, 501), and some answer it with a 404 for a file `GET` serves (Cloudflare Zaraz).
 4. If the HTML had an `ETag` or `Last-Modified`, send the same `GET` again with `If-None-Match` / `If-Modified-Since`.
-5. With `--baseline <report.json>`, `HEAD` every asset URL from the previous report.
+5. With `--baseline <report.json>`, `HEAD` every asset URL from the previous report, with the same `GET` check on errors.
 
 Nothing else: no crawling, no guessing paths like `/sw.js`.
 

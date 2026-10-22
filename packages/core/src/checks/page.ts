@@ -66,7 +66,7 @@ export function baselineChecks(ctx: Context): Finding[] {
         ...base,
         check: "assets.previous-removed",
         severity: "fail",
-        title: `${plural(gone.length, "file")} from the previous deploy no longer load`,
+        title: `${plural(gone.length, "file")} from the previous deploy no longer ${gone.length === 1 ? "loads" : "load"}`,
         detail: [
           "Tabs opened before this deploy still run the old code, which loads these URLs on demand (a route, a lazy component). " +
             "They now fail, and an unhandled failed import() usually means a blank screen.",

@@ -53,7 +53,7 @@ npx stale-deploy-check https://example.com/ --prompt | pbcopy
 
 The prompt lists each failure and warning with its evidence and suggested fix, says where headers usually come from in a repo, and ends with the command that checks the fix. Run at a terminal, the report ends with this command whenever there's something to fix. The prompt quotes headers and URLs from the site, and tells the agent to treat them as data. To also review the service worker and deploy code, use the [agent skill](#agent-skill) instead.
 
-It makes a handful of requests per run: the page, a conditional request for it, a `HEAD` for each script and stylesheet (up to 20), and one for a made-up file next to them, to see how long a missing file's 404 is kept. It doesn't crawl or send cookies.
+It makes a handful of requests per run: the page, a conditional request for it, a `HEAD` for each script and stylesheet (up to 20) and for a made-up file next to them, to see how long a missing file's 404 is kept, with a `GET` when `HEAD` gets an error. It doesn't crawl or send cookies.
 
 ### Options
 

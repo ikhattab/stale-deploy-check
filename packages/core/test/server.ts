@@ -111,6 +111,9 @@ const routes: Record<string, Route> = {
   // An asset server that rejects HEAD.
   "/head405/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/head405/app.9c8b7a.js"></script>`) }),
   "/head405/app.9c8b7a.js": (req) => (req.method === "HEAD" ? { status: 405 } : asset(YEAR)(req)),
+  // One that answers HEAD with a 404 for a file GET serves, like Cloudflare Zaraz's /static/z/i.js.
+  "/head404/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/head404/app.9c8b7a.js"></script>`) }),
+  "/head404/app.9c8b7a.js": (req) => (req.method === "HEAD" ? { status: 404, headers: { "content-type": "text/plain" } } : asset(YEAR)(req)),
 
   // Escape sequences in a <meta> tag, which ends up in a finding title.
   "/escape/": () => ({
