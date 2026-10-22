@@ -12,7 +12,8 @@
     "build": "tsc -b packages/core packages/cli packages/probe packages/extension && node scripts/bundle.mjs",
     "typecheck": "tsc -b packages/core packages/cli packages/probe packages/extension",
     "test": "node --conditions=source --test 'packages/*/test/*.test.ts'",
-    "check": "npm run build && npm test"
+    "check": "npm run build && npm test",
+    "package:extension": "npm run build && node scripts/package-extension.mjs"
   },
   "engines": {
     "node": ">=20.12"

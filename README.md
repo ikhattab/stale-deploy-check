@@ -155,19 +155,24 @@ What it checks in the repo:
 
 What it won't do: edit your code unless you ask, install packages or build in your repo (tests run in a scratch copy), or download the CLI with `npx` without asking first.
 
+## Privacy
+
+None of the tools collect anything or send it anywhere, and none have telemetry. The CLI and the GitHub Action request the URL you give them and its files, as listed above. The browser extension runs only when you click it, and only on that tab: it reads the tab, requests that page and its files from the same site, and shows the result in its popup. The agent skill runs in your coding agent and reads your repo there.
+
 ## Development
 
 ```sh
 npm install
 npm run build   # tsc -b, then bundle the CLI, the probe snippet, and the extension
 npm test        # node --test against the TypeScript sources
+npm run package:extension   # build, then zip the extension for the Chrome Web Store
 ```
 
 ```
 packages/core       fetch-only checks that return findings; runs in Node, Workers, and browsers
 packages/cli        the stale-deploy-check command
 packages/probe      runs inside a tab: is it on the old version, and why (built as a console snippet)
-packages/extension  a browser extension that runs the probe on the current tab (load packages/extension/dist/chrome unpacked)
+packages/extension  a browser extension that runs the probe on the current tab (load packages/extension/dist/chrome unpacked); store/ has the listing
 skills/             the agent skill
 evals/              the skill's test prompts and two example repos
 calibration/        runs the CLI against 50 real sites and compares versions
