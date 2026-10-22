@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run typecheck
+
+  # Runs this repo's action.yml the way users do, against the test server and with the working tree's CLI.
+  action:
+    runs-on: ubuntu-latest
+    env:
+      CLI: node packages/cli/dist/stale-deploy-check.js
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci && npm run build
+
+      - name: Start the test server
+        run: |
+          node --input-type=module -e 'import { startServer } from "./packages/core/test/server.ts"; console.log((await startServer()).url(""));' > "$RUNNER_TEMP/server-url" &
+          for _ in $(seq 1 20); do [ -s "$RUNNER_TEMP/server-url" ] && break; sleep 0.5; done
+          echo "BASE=$(cat "$RUNNER_TEMP/server-url")" >> "$GITHUB_ENV"
+
+      - name: A passing site
+        id: good
+        uses: ./
+        with:
+          url: ${{ env.BASE }}/good/
+          command: ${{ env.CLI }}
+
+      - name: The same site again, compared with the first report
+        id: again
+        uses: ./
+        with:
+          url: ${{ env.BASE }}/good/
+          command: ${{ env.CLI }}
+
+      - name: A failing site
+        id: bad
+        continue-on-error: true
+        uses: ./
+        with:
+          url: ${{ env.BASE }}/bad/
+          command: ${{ env.CLI }}
+
+      - name: A site that can't be reached
+        id: down
+        continue-on-error: true
+        uses: ./
+        with:
+          url: http://127.0.0.1:1/
+          command: ${{ env.CLI }}
+
+      - name: The published CLI from npm
+        id: npm
+        uses: ./
+        with:
+          url: https://ihabkhattab.com/
+          baseline: "false"
+
+      - name: Check the outcomes
+        env:
+          GOOD: ${{ steps.good.outcome }} ${{ steps.good.outputs.exit-code }} ${{ steps.good.outputs.compared }}
+          AGAIN: ${{ steps.again.outcome }} ${{ steps.again.outputs.exit-code }} ${{ steps.again.outputs.compared }}
+          BAD: ${{ steps.bad.outcome }} ${{ steps.bad.outputs.exit-code }}
+          DOWN: ${{ steps.down.outcome }} ${{ steps.down.outputs.exit-code }} ${{ steps.down.outputs.report }}
+          NPM: ${{ steps.npm.outcome }} ${{ steps.npm.outputs.exit-code }} ${{ steps.npm.outputs.compared }}
+        run: |
+          check() { if [ "$2" = "$3" ]; then echo "ok   $1: $2"; else echo "FAIL $1: got '$2', expected '$3'"; failed=1; fi; }
+          failed=0
+          check good "$GOOD" "success 0 false"
+          check again "$AGAIN" "success 0 true"
+          check bad "$BAD" "failure 1"
+          check down "$DOWN" "failure 2 "
+          check npm "$NPM" "success 0 false"
+          exit $failed
