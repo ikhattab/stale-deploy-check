@@ -78,12 +78,22 @@ jobs:
           url: http://127.0.0.1:1/
           command: ${{ env.CLI }}
 
+      - name: A CLI that exits 1 without a report
+        id: broken
+        continue-on-error: true
+        uses: ./
+        with:
+          url: ${{ env.BASE }}/good/
+          command: "false"
+
+      # latest, not the action's default, which names a version that isn't on npm until it's published.
       - name: The published CLI from npm
         id: npm
         uses: ./
         with:
           url: https://ihabkhattab.com/
           baseline: "false"
+          version: latest
 
       - name: Check the outcomes
         env:
@@ -91,6 +101,7 @@ jobs:
           AGAIN: ${{ steps.again.outcome }} ${{ steps.again.outputs.exit-code }} ${{ steps.again.outputs.compared }}
           BAD: ${{ steps.bad.outcome }} ${{ steps.bad.outputs.exit-code }} ${{ steps.bad.outputs.compared }}
           DOWN: ${{ steps.down.outcome }} ${{ steps.down.outputs.exit-code }} ${{ steps.down.outputs.compared }} ${{ steps.down.outputs.report }}
+          BROKEN: ${{ steps.broken.outcome }} ${{ steps.broken.outputs.exit-code }} ${{ steps.broken.outputs.compared }} ${{ steps.broken.outputs.report }}
           NPM: ${{ steps.npm.outcome }} ${{ steps.npm.outputs.exit-code }} ${{ steps.npm.outputs.compared }}
         run: |
           check() { if [ "$2" = "$3" ]; then echo "ok   $1: $2"; else echo "FAIL $1: got '$2', expected '$3'"; failed=1; fi; }
@@ -100,5 +111,7 @@ jobs:
           # Different URLs from the passing site, so nothing to compare with.
           check bad "$BAD" "failure 1 false"
           check down "$DOWN" "failure 2 false "
+          # Not a finding: the check never ran.
+          check broken "$BROKEN" "failure 2 true "
           check npm "$NPM" "success 0 false"
           exit $failed
