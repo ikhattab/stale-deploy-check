@@ -4,6 +4,8 @@ Find out why users still see the old version after a deploy.
 
 Based on [We Deployed an Hour Ago. Why Do Users Still See the Old Version?](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/), which walks through the four places an old copy can live: the HTTP cache, the CDN, the open tab, and the service worker.
 
+> **Work in progress.** Expect rough edges and missed cases, and output that may change between versions. If it gets your site wrong, [open an issue](https://github.com/ikhattab/stale-deploy-check/issues).
+
 
 ## Usage
 
