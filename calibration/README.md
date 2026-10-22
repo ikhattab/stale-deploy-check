@@ -4,10 +4,10 @@ Unit tests show the checks do what the code says. This shows whether that's righ
 
 ```sh
 npm run build
-node calibration/run.mjs --cli npm:0.3.2 &   # the last release, through npx
+node calibration/run.mjs --cli npm:0.4.0 &   # the last release, through npx
 node calibration/run.mjs                      # the working tree
 wait
-node calibration/report.mjs calibration/results/npm-0.3.2.json calibration/results/local.json
+node calibration/report.mjs calibration/results/npm-0.4.0.json calibration/results/local.json
 ```
 
 Run both at the same time so a difference comes from the tool, not from a site that changed in between. Each run makes about 22 requests per site, 4 sites at a time.
@@ -33,6 +33,8 @@ The new probe warned on 15 sites. Each was checked against the probe's headers, 
 
 It's a warn, not a fail: it takes a race or a rollback to hit, and failing would have turned 9 of these green CI runs red. Everything else matched 0.3.4.
 
+The published 0.4.0 gave the same results as the working tree, apart from news.ycombinator.com timing out in one of the two runs. `results/npm-0.4.0.json` is the baseline now.
+
 ## Review: 0.3.1 → working tree, 2026-10-22
 
 Fixed, all false calls found by the first run:
@@ -56,4 +58,4 @@ Checked and left as they are:
 - **`cdn.edge-rule-suspected` on Fastly (3)**: right, but the detail now explains Surrogate-Control instead of suggesting a cache-everything rule.
 - **gohugo.io and squoosh.app** time out from this network with plain `curl` too, so that's not the tool.
 
-The published 0.3.2 gave the same results as the working tree, apart from theguardian.com's `html.revalidation`, which comes and goes between runs. `results/npm-0.3.2.json` is the baseline now.
+The published 0.3.2 gave the same results as the working tree, apart from theguardian.com's `html.revalidation`, which comes and goes between runs. `results/npm-0.4.0.json` is the baseline now.
