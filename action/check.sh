@@ -39,9 +39,14 @@ else
   trap 'rm -rf "$cli_dir"' EXIT
 fi
 
+# The report quotes the checked site (headers, URLs), so the runner mustn't read a "::" line in it
+# as a workflow command.
+token=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
+echo "::stop-commands::$token"
 echo "Running stale-deploy-check $(cd "$cli_dir" && "${cli[@]}" --version 2>&1)"
 (cd "$cli_dir" && "${cli[@]}" "${args[@]}") 2>&1 | tee "$dir/report.txt"
 code=${PIPESTATUS[0]}
+echo "::$token::"
 
 {
   echo "exit-code=$code"
