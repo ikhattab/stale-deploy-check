@@ -1,6 +1,6 @@
 import { learn } from "../links.ts";
 import type { Finding, RequestRecord } from "../types.ts";
-import { header, plural, status, type Context } from "./context.ts";
+import { header, plural, servesHtml, status, type Context } from "./context.ts";
 
 export function pageChecks(ctx: Context): Finding[] {
   const findings: Finding[] = [];
@@ -91,9 +91,4 @@ export function baselineChecks(ctx: Context): Finding[] {
       evidence: kept.map(status),
     },
   ];
-}
-
-/** A script or stylesheet URL answered with an HTML page, like a single-page app's fallback for missing paths. */
-function servesHtml(record: RequestRecord): boolean {
-  return /\.(?:[cm]?js|css)$/.test(new URL(record.url).pathname) && /text\/html/i.test(record.headers["content-type"] ?? "");
 }

@@ -41,6 +41,8 @@ Nothing else: no crawling, no guessing paths like `/sw.js`.
 | `assets.short-cache` | warn | Hashed asset with no `max-age`, or `max-age` < 30 days. Browsers ask about files that can't change. | Q3 |
 | `assets.short-cache` | pass | Every hashed asset is cached for at least 30 days. | Q3 |
 | `assets.no-immutable` | info | Hashed asset with a long `max-age` but no `immutable`. | Q3 |
+| `assets.missing-cached` | warn | A made-up file next to the first hashed asset (same folder, extension and name shape, so the site's rules for hashed files match it) gets an error, or an HTML fallback, that a browser may keep for more than 300 s (`--html-max-age`) or a CDN for more than 300 s (`--edge-max-age`). A browser that asks for a file while it's missing (new HTML arrived first, or a rollback brought old names back) keeps the error, often for a year when a long `immutable` rule matches misses too. | Q3 |
+| `assets.missing-cached` | pass | The error for a missing hashed file is kept within those limits. Not reported when the server answers any path with a real file. | Q3 |
 | `assets.not-checked` | info | Assets on other origins, assets over the `--max-assets` limit, or no assets in the HTML at all. Names the origin with the most files so it can be added with `--asset-origin`, and says so in the title when nothing was checked at all. | Q4 |
 
 "Has a content hash" is a name heuristic only; we don't hash the bytes. A token counts as a hash when it's at least 6 characters of `[A-Za-z0-9_~-]` and has a digit or mixes upper and lower case (so `bundle` and `framework` don't count). Build-target names like `es2015` or `v2` don't count, and neither does a dashed token with a bundler word in it (`es2015-polyfills`, `vendors-2`). A URL is hashed when any of these hold:

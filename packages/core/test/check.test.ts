@@ -151,6 +151,34 @@ describe("check()", () => {
     assert.equal(find(report, "assets.previous-kept"), undefined);
   });
 
+  describe("a missing hashed file", () => {
+    test("is a warning when its 404 is cached for a year", async () => {
+      const report = await check(server.url("/miss-immutable/"));
+      const finding = find(report, "assets.missing-cached")!;
+      assert.equal(finding.severity, "warn");
+      assert.equal(finding.title, "The 404 for a missing hashed file is cached for 365 days");
+      assert.match(finding.detail, /immutable also stops a reload/);
+      assert.ok(report.requests.some((r) => r.url === server.url("/miss-immutable/_astro/ncc.Ok8xD4mN.js") && r.status === 404));
+    });
+
+    test("is a warning when the CDN keeps an HTML fallback for it", async () => {
+      const finding = find(await check(server.url("/miss-fallback/")), "assets.missing-cached")!;
+      assert.equal(finding.severity, "warn");
+      assert.equal(finding.title, "The HTML page served for a missing js file is cached for 24 hours");
+      assert.match(finding.detail, /The CDN keeps it that long/);
+    });
+
+    test("passes when the error isn't kept", async () => {
+      const finding = find(await check(server.url("/good/")), "assets.missing-cached")!;
+      assert.equal(finding.severity, "pass");
+      assert.equal(finding.detail, "The 404 for a missing hashed file is not reused without asking, so a browser that asks too early gets the file on its next try.");
+    });
+
+    test("isn't judged when the server answers any path", async () => {
+      assert.equal(find(await check(server.url("/miss-anything/")), "assets.missing-cached"), undefined);
+    });
+  });
+
   describe("whose assets are checked", () => {
     // Every host is served by the test server.
     const anyHost = { fetch: (input: string, init: RequestInit) => fetch(server.url(new URL(input).pathname), init) };

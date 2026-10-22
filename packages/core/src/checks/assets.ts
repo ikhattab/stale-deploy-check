@@ -1,9 +1,10 @@
 import { browserFreshness, parseCacheControl, type BrowserFreshness } from "../cache-control.ts";
+import { sharedLifetime } from "../cdn.ts";
 import { DAY, formatDuration } from "../duration.ts";
 import { learn } from "../links.ts";
 import { hasContentHash } from "../naming.ts";
 import type { Evidence, Finding } from "../types.ts";
-import { header, plural, status, type AssetResult, type Context } from "./context.ts";
+import { computed, header, plural, servesHtml, status, type AssetResult, type Context } from "./context.ts";
 
 export function assetChecks(ctx: Context): Finding[] {
   const findings: Finding[] = [];
@@ -130,6 +131,47 @@ export function assetChecks(ctx: Context): Finding[] {
     });
   }
 
+  const missing = ctx.missing;
+  // A 200 that isn't an HTML fallback means the server answers any path, so there's no miss to judge.
+  if (missing && (missing.status >= 400 || servesHtml(missing))) {
+    const cc = parseCacheControl(missing.headers["cache-control"]);
+    const freshness = browserFreshness(missing);
+    const browser = lifetimeOf(freshness);
+    const shared = sharedLifetime(missing)?.seconds ?? 0;
+    const lifetime = Math.max(browser, shared);
+    const what = missing.status >= 400 ? `${missing.status} for a missing hashed file` : `HTML page served for a missing ${extensionOf(missing.url)} file`;
+    if (browser > ctx.thresholds.htmlMaxAge || shared > ctx.thresholds.edgeMaxAge) {
+      const guessed = freshness.kind === "heuristic" && browser >= shared;
+      findings.push({
+        ...base,
+        check: "assets.missing-cached",
+        severity: "warn",
+        title: `The ${what} is cached for ${guessed ? "about " : ""}${formatDuration(lifetime)}`,
+        detail:
+          "A browser can ask for a hashed file while it's missing: new HTML reached it before the files did, or a rollback brought back file names an open tab asked for while they were gone. " +
+          `It keeps the error the way it would keep the real file, so that user can't load the page's code for ${formatDuration(lifetime)}, even once the file is there.` +
+          (cc.has("immutable") ? " immutable also stops a reload from asking again." : "") +
+          (guessed ? " There's no explicit lifetime, so that's the browser's guess from Last-Modified." : "") +
+          (shared > browser ? " The CDN keeps it that long, so every user who asks gets it." : ""),
+        evidence: [status(missing), header(missing, "cache-control"), computed("cached for", formatDuration(lifetime))],
+        fix:
+          "Send Cache-Control: no-store on responses for missing files. A long-lifetime rule for hashed files usually matches by path, so it covers misses too; " +
+          "set the header where the error is sent (the server, or an edge function in front of the static files).",
+        learnMore: learn.headers,
+      });
+    } else {
+      findings.push({
+        ...base,
+        check: "assets.missing-cached",
+        severity: "pass",
+        title: "Missing hashed files aren't cached long",
+        detail: `The ${what} is ${lifetime > 0 ? `cached for ${formatDuration(lifetime)}` : "not reused without asking"}, so a browser that asks too early gets the file on its next try.`,
+        evidence: [status(missing), header(missing, "cache-control")],
+        learnMore: learn.headers,
+      });
+    }
+  }
+
   const { otherOrigins, overCap, limit } = ctx.notChecked;
   if (ctx.assets.length === 0 && otherOrigins.length === 0) {
     findings.push({
@@ -198,6 +240,10 @@ function countByOrigin(urls: string[]): [string, number][] {
 
 function cacheEvidence(asset: AssetResult): Evidence {
   return header(asset.record, "cache-control");
+}
+
+function extensionOf(url: string): string {
+  return /\.([A-Za-z0-9]+)$/.exec(new URL(url).pathname)?.[1] ?? "";
 }
 
 function pathOf(url: string): string {

@@ -75,3 +75,23 @@ export function versionParam(assetUrl: string): string | undefined {
   }
   return undefined;
 }
+
+/**
+ * A URL for a file that doesn't exist, shaped like a real hashed one: same folder, extension and
+ * pattern of letters, digits and separators, so the site's rules for hashed files match it too.
+ * Letters are rotated by 13 and digits by 5 (app.3f9a1c.js becomes ncc.8s4n6p.js).
+ */
+export function missingTwin(assetUrl: string): string {
+  const url = new URL(assetUrl);
+  url.search = "";
+  const slash = url.pathname.lastIndexOf("/") + 1;
+  const file = url.pathname.slice(slash);
+  const extension = EXTENSION.exec(file)?.[0] ?? "";
+  const stem = file.slice(0, file.length - extension.length).replace(/[A-Za-z0-9]/g, (c) => {
+    if (/\d/.test(c)) return String((Number(c) + 5) % 10);
+    const a = c <= "Z" ? 65 : 97;
+    return String.fromCharCode(((c.charCodeAt(0) - a + 13) % 26) + a);
+  });
+  url.pathname = url.pathname.slice(0, slash) + stem + extension;
+  return url.href;
+}

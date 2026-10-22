@@ -28,6 +28,8 @@ export interface Context {
   notChecked: { otherOrigins: string[]; overCap: string[]; limit: number };
   /** With --baseline: requests for the previous report's assets that this HTML no longer references. */
   baseline?: { checked: RequestRecord[] };
+  /** A request for a made-up file next to a hashed asset, to see what a browser that asks too early gets. */
+  missing?: RequestRecord;
   thresholds: Thresholds;
 }
 
@@ -41,6 +43,11 @@ export function status(record: RequestRecord): Evidence {
 
 export function computed(label: string, value: string): Evidence {
   return { kind: "computed", label, value };
+}
+
+/** A script or stylesheet URL answered with an HTML page, like a single-page app's fallback for missing paths. */
+export function servesHtml(record: RequestRecord): boolean {
+  return /\.(?:[cm]?js|css)$/.test(new URL(record.url).pathname) && /text\/html/i.test(record.headers["content-type"] ?? "");
 }
 
 export function plural(n: number, one: string, many = `${one}s`): string {

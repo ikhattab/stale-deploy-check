@@ -8,7 +8,7 @@ import { DAY } from "./duration.ts";
 import { parsePage } from "./html.ts";
 import { CheckError, Recorder, type FetchLike } from "./http.ts";
 import { ARTICLE } from "./links.ts";
-import { hasContentHash, versionParam } from "./naming.ts";
+import { hasContentHash, missingTwin, versionParam } from "./naming.ts";
 import type { Finding, Report, RequestRecord, Severity } from "./types.ts";
 
 export const VERSION = "0.3.4";
@@ -67,6 +67,10 @@ export async function check(target: string, options: CheckOptions = {}): Promise
     return { url: assetUrl, record, hashed: hasContentHash(assetUrl), ...(version ? { versionParam: version } : {}) };
   });
 
+  // A browser can ask for a new hashed file before it's live. See what it gets back for one that doesn't exist.
+  const sample = assets.find((a) => a.hashed && a.record.status < 400);
+  const missing = sample ? await headOrGet(recorder, missingTwin(sample.url)) : undefined;
+
   let baseline: Context["baseline"];
   if (options.baseline) {
     const current = new Set(own);
@@ -81,6 +85,7 @@ export async function check(target: string, options: CheckOptions = {}): Promise
     assets,
     notChecked: { otherOrigins, overCap: own.slice(maxAssets), limit: maxAssets },
     ...(baseline ? { baseline } : {}),
+    ...(missing ? { missing } : {}),
     thresholds,
   };
   const all = [...pageChecks(ctx), ...htmlChecks(ctx), ...assetChecks(ctx), ...cdnChecks(ctx), ...baselineChecks(ctx)];

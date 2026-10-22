@@ -55,6 +55,8 @@ Example fix for a `_headers` file (Netlify, Cloudflare):
 
 **Missing ETag on HTML only.** If the CLI reports `html.no-validator` but assets have ETags, look for something that rewrites HTML on the way out. On Cloudflare, [Email Obfuscation, Rocket Loader, Automatic HTTPS Rewrites, and Replace insecure JavaScript libraries remove or weaken ETags](https://developers.cloudflare.com/cache/reference/etag-headers/), and Email Obfuscation only touches HTML. These are dashboard settings, not repo files, so say which ones to check rather than claiming one is on. A Worker or server that builds a new `Headers` object instead of copying the original can also drop it. Read that code before blaming the zone.
 
+**Missing files cached like real ones.** If the CLI reports `assets.missing-cached` as a warning, the long rule for hashed assets also matches misses: header rules match by path, not by whether the file exists. A `_headers` file can't set a different header on a 404, so the fix goes where the 404 is sent: a Worker, edge function, or server that sets `Cache-Control: no-store` on missing files under the assets path. On Netlify, Vercel, and Cloudflare static assets, that means a function or Worker in front of the files. Name the file that sets the long rule, and where the override would go.
+
 Use the bundler's real asset directory: Vite `/assets/*`, Astro `/_astro/*`, Next.js `/_next/static/*`, CRA `/static/*`. Check the build output if unsure. Some hosts apply every matching rule, so a `/*` rule can stack with the assets rule. Check the host's docs on how matching rules combine.
 
 ## code.cdn-purge

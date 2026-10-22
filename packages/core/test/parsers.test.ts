@@ -4,7 +4,7 @@ import { browserFreshness, parseCacheControl } from "../src/cache-control.ts";
 import { detectCdn, edgeCacheState, sharedLifetime } from "../src/cdn.ts";
 import { formatDuration } from "../src/duration.ts";
 import { parsePage } from "../src/html.ts";
-import { hasContentHash, versionParam } from "../src/naming.ts";
+import { hasContentHash, missingTwin, versionParam } from "../src/naming.ts";
 import type { RequestRecord } from "../src/types.ts";
 
 const record = (headers: Record<string, string>): RequestRecord => ({ method: "GET", url: "https://example.com/", status: 200, headers, ms: 0 });
@@ -154,4 +154,17 @@ test("formatDuration", () => {
   assert.equal(formatDuration(720), "12 min");
   assert.equal(formatDuration(5.5 * 3600), "5.5 hours");
   assert.equal(formatDuration(268_000), "3.1 days");
+});
+
+describe("missingTwin", () => {
+  test("keeps the folder, the extension and the shape of the name, and drops the query", () => {
+    assert.equal(missingTwin("https://example.com/assets/app.3f9a1c.js?v=1"), "https://example.com/assets/ncc.8s4n6p.js");
+    assert.equal(missingTwin("https://example.com/_astro/index-BxKaQzWe.css"), "https://example.com/_astro/vaqrk-OkXnDmJr.css");
+  });
+
+  test("is still a hashed name", () => {
+    for (const path of ["/assets/app.3f9a1c.js", "/assets/index-BxKaQzWe.css", "/static/js/main.8b1e07ab.chunk.js"]) {
+      assert.ok(hasContentHash(missingTwin(`https://example.com${path}`)), path);
+    }
+  });
 });

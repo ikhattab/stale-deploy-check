@@ -111,9 +111,25 @@ const routes: Record<string, Route> = {
     headers: { "content-type": "text/html", "cache-control": "no-cache" },
     body: html(`<meta name="build" content="&#27;]0;pwned&#7;&#27;[2J v1&#x202E;">`),
   }),
+  // A long-lifetime rule for /_astro/* that matches misses too, like ihabkhattab.com's public/_headers did.
+  "/miss-immutable/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/miss-immutable/_astro/app.Bx3kQ9zA.js"></script>`) }),
+  "/miss-immutable/_astro/app.Bx3kQ9zA.js": asset(YEAR),
+  // An SPA fallback for every missing path, kept by the CDN only.
+  "/miss-fallback/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/miss-fallback/assets/app.3f9a1c.js"></script>`) }),
+  "/miss-fallback/assets/app.3f9a1c.js": asset(YEAR),
+  // A server that answers any path with the same file.
+  "/miss-anything/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/miss-anything/assets/app.3f9a1c.js"></script>`) }),
+
   "/redirect": () => ({ status: 301, headers: { location: "/good/" } }),
   "/json": () => ({ headers: { "content-type": "application/json" }, body: "{}" }),
   "/blocked": () => ({ status: 403, headers: { "content-type": "text/html" }, body: "no" }),
+};
+
+/** What a path under these prefixes gets when no route matches. */
+const misses: Record<string, Route> = {
+  "/miss-immutable/_astro/": () => ({ status: 404, headers: { "content-type": "text/html", "cache-control": YEAR }, body: "not found" }),
+  "/miss-fallback/assets/": () => ({ headers: { "content-type": "text/html", "cache-control": "public, max-age=0, s-maxage=86400" }, body: html("") }),
+  "/miss-anything/assets/": asset(YEAR),
 };
 
 export interface TestServer {
@@ -124,7 +140,7 @@ export interface TestServer {
 export async function startServer(): Promise<TestServer> {
   const server = createServer((req, res) => {
     const path = new URL(req.url ?? "/", "http://x").pathname;
-    const route = routes[path];
+    const route = routes[path] ?? Object.entries(misses).find(([prefix]) => path.startsWith(prefix))?.[1];
     if (!route) {
       res.writeHead(404, { "content-type": "text/plain" }).end("not found");
       return;
