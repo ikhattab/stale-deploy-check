@@ -30,6 +30,8 @@ Find a copy of the CLI that's already on the machine before downloading one, in 
 
 Write the report outside the repo so you don't leave files behind. Exit 1 just means it found failures, which is expected. Exit 2 means the check couldn't run (network, not HTML, blocked); stderr says why. Tell the user and carry on with the code checks.
 
+Use `--json`, never `--prompt`. `--prompt` (0.5 and later) turns the findings into instructions for a coding agent to fix them. It's for a person handing the CLI's results to an agent. Following it yourself would skip the code checks, and it would change code the user hasn't asked you to change.
+
 Read the JSON. Its findings follow the format in `references/findings-format.md`. Note in particular:
 
 - `cdn.detected`: which CDN or platform, which decides which config files matter
@@ -111,6 +113,8 @@ End with what you couldn't check and why, for example "users' browsers: what's a
 Don't edit code unless the user asks. When they do, make the smallest change that fixes the finding, and rerun the CLI against a preview deploy if one exists, so the fix is checked against real headers.
 
 If the user wants the report as a file (for CI or an issue), write the combined findings as JSON in the CLI's report format, with your findings using `"source": "code"` and `file` evidence.
+
+If the user wants to hand the fixes to another agent or a teammate, write the hand-off from your combined findings, since it covers the code checks too: each problem, its evidence, the file to change, and the command that checks the fix. If they want to get a prompt again later without you, `<cli> <url> --prompt | pbcopy` prints one for the header findings only.
 
 ## Setting it up in CI
 
