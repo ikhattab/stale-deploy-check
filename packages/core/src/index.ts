@@ -1,6 +1,8 @@
 export { check, summarize, ownedBy, mapLimit, DEFAULT_THRESHOLDS, VERSION, type CheckOptions } from "./run.ts";
 export { parsePage, buildIdFromMeta, type BuildId, type ParsedPage } from "./html.ts";
 export { servesHtml, plural } from "./checks/context.ts";
+export { fixPrompt, type PromptInput } from "./prompt.ts";
+export { clean, shellQuote } from "./text.ts";
 export { CheckError, type CheckErrorCode, type FetchLike } from "./http.ts";
 export type { Thresholds } from "./checks/context.ts";
 export { formatDuration } from "./duration.ts";

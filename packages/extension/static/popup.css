@@ -119,11 +119,18 @@ details > a {
   color: var(--accent);
 }
 
+/* Pinned, so the buttons stay in reach when the findings are longer than the popup. */
 footer {
+  position: sticky;
+  bottom: 0;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  margin-top: 10px;
+  margin: 10px -14px -12px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
 }
 
 button {
@@ -134,6 +141,15 @@ button {
   color: var(--fg);
   font: inherit;
   cursor: pointer;
+}
+
+#prompt {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button[hidden] {
+  display: none;
 }
 
 button:disabled {

@@ -1,4 +1,4 @@
-import type { Finding, Layer, Report, Severity } from "@stale-deploy-check/core";
+import { clean, type Finding, type Layer, type Report, type Severity } from "@stale-deploy-check/core";
 
 const LAYERS: { layer: Layer; heading: string }[] = [
   { layer: "service-worker", heading: "Service worker" },
@@ -24,13 +24,7 @@ export function makeStyle(color: boolean): Style {
   return { red: wrap(31, 39), yellow: wrap(33, 39), green: wrap(32, 39), cyan: wrap(36, 39), dim: wrap(2, 22), bold: wrap(1, 22) };
 }
 
-// C0 and C1 controls (newlines included) and bidi overrides. Headers, URLs and <meta> content come from the
-// checked site, and an escape sequence in them would otherwise reach the user's terminal.
-const UNSAFE = /[\x00-\x08\x0a-\x1f\x7f-\x9f‪-‮⁦-⁩]/g;
-
-export function clean(text: string): string {
-  return text.replace(UNSAFE, "?");
-}
+export { clean };
 
 function cleanFinding(f: Finding): Finding {
   return {
