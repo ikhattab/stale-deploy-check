@@ -45,6 +45,12 @@ const routes: Record<string, Route> = {
   "/good/assets/forbidden.333ccc.js": () => ({ status: 403, headers: { "content-type": "application/xml" }, body: "<Error><Code>AccessDenied</Code></Error>" }),
   "/good/assets/fallback.444ddd.js": () => ({ headers: { "content-type": "text/html" }, body: html("") }),
 
+  // A deploy an hour ago, by Last-Modified: build 42, and only one of /good/'s files left. For the browser probe.
+  "/released/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "no-cache", "last-modified": new Date(Date.now() - 60 * 60 * 1000).toUTCString() },
+    body: html(`<meta name="build" content="42"><script type="module" src="/good/assets/app.3f9a1c.js"></script>`),
+  }),
+
   // A Cloudflare zone cache holding HTML that says no-cache.
   "/edge/": () => ({
     headers: { "content-type": "text/html", "cache-control": "no-cache", "cf-ray": "8d1f-FRA", "cf-cache-status": "HIT", age: "2412" },

@@ -4,12 +4,26 @@ export interface ParsedPage {
   /** Absolute URLs of scripts and stylesheets, in document order, deduplicated. */
   assets: string[];
   /** A build or version id from a <meta> tag, if the page has one. */
-  buildId?: { name: string; content: string };
+  buildId?: BuildId;
   /** How we know the page registers a service worker, if we can tell from the HTML. */
   serviceWorker?: string;
 }
 
+export interface BuildId {
+  /** The <meta> name it came from: build, version, release, commit... */
+  name: string;
+  content: string;
+}
+
 const BUILD_META = /^(build|version|release|commit|app[-_]?version|build[-_]?(id|version))$/i;
+
+/** The build id a <meta name content> holds, if it's one. Shared with the browser probe, which reads <meta> from the DOM. */
+export function buildIdFromMeta(name: string | null | undefined, content: string | null | undefined): BuildId | undefined {
+  if (!name || !content || !BUILD_META.test(name)) return undefined;
+  // It ends up in a title; a build id longer than this isn't one.
+  return { name, content: content.slice(0, 100) };
+}
+
 /** Registration helpers that bundlers and PWA plugins emit, like vite-plugin-pwa's registerSW.js. Matches the start of the file name only. */
 const SW_SCRIPT_NAME = /(?:^|\/)(?:register-?sw|sw-?register|register-?service-?worker)\b[^/]*\.m?js(?:\?|$)/i;
 
@@ -38,9 +52,9 @@ export function parsePage(html: string, pageUrl: string): ParsedPage {
           if (rel.includes("stylesheet") || rel.includes("modulepreload") || (rel.includes("preload") && (as === "script" || as === "style"))) {
             raw.push(attrs.href);
           }
-        } else if (name === "meta" && attrs.name && attrs.content && !page.buildId && BUILD_META.test(attrs.name)) {
-          // It ends up in a title; a build id longer than this isn't one.
-          page.buildId = { name: attrs.name, content: attrs.content.slice(0, 100) };
+        } else if (name === "meta" && !page.buildId) {
+          const buildId = buildIdFromMeta(attrs.name, attrs.content);
+          if (buildId) page.buildId = buildId;
         }
       },
       ontext(text) {

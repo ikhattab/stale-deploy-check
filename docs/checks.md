@@ -1,6 +1,6 @@
 # Checks
 
-Two sources: the **CLI** reads HTTP responses (`source: "headers"`), and the **skill** reads the repo (`source: "code"`). The CLI can't see users' browsers, so the open-tab and service-worker layers are mostly the skill's job.
+Three sources: the **CLI** reads HTTP responses (`source: "headers"`), the **skill** reads the repo (`source: "code"`), and the **browser probe** reads one tab's own state (`source: "browser"`). The CLI can't see users' browsers, so the open-tab and service-worker layers are mostly the skill's job, and the probe shows them for the tab it runs in.
 
 Section links point at the article: [Q2](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/#question-2-no-cache-header-means-no-caching-right) · [Q3](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/#question-3-then-turn-caching-off) · [Q4](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/#question-4-why-put-a-hash-in-the-name) · [Q5](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/#question-5-some-users-still-get-it-for-an-hour) · [Q6](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/#question-6-a-blank-screen-with-no-cache-involved) · [Q7](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/#question-7-now-add-a-service-worker) · [Q8](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/#question-8-prove-it)
 
@@ -106,12 +106,32 @@ The skill runs the CLI first (against the URL the user gives, or a preview URL),
 
 The skill doesn't edit code unless asked. Each finding's `fix` is written for this repo, naming the file to change.
 
+## Browser probe checks
+
+The probe (`packages/probe`) runs inside a tab, as a console snippet today. It first reads the tab without making requests: its `<meta>` build id, Navigation Timing for the document, the scripts and stylesheets in Resource Timing and the DOM, the service worker registration, and copies of the page in Cache Storage. Then it makes requests from the page with `cache: "no-store"`:
+
+1. `GET` the tab's URL, to compare with the live page.
+2. `HEAD` each script and stylesheet this tab loaded, on the site's own origins, that the live page doesn't reference (up to 50), falling back to `GET` if the server rejects `HEAD`.
+
+Requests go through the tab's service worker, if it has one. Response headers on other origins can only be read when they allow it with CORS.
+
+| Check id | Severity | Condition | Learn |
+| --- | --- | --- | --- |
+| `tab.build` | pass | The tab and the live page have the same build id, or without one, the tab loaded every script and stylesheet the live page references. | Q8 |
+| `tab.build` | fail | The tab is on an older build and loaded after the live page's `Last-Modified`. The layer is where its HTML came from: `service-worker`, `http-cache`, or `cdn` when it came over the network or as a 304. A `Last-Modified` within 5 s of `Date` is the server's clock, not a deploy, and doesn't count. | Q3, Q5, Q7 |
+| `tab.build` | warn | An older build, from the service worker or the HTTP cache, with no deploy time to compare. | Q3, Q7 |
+| `tab.build` | info | An older build in a tab that loaded before the deploy, or came from the network with no deploy time: an open tab, as expected. Also: the live page couldn't be loaded, the service worker answered the probe's request for it, or there's nothing to compare. | Q6, Q8 |
+| `tab.html-source` | info | Where the tab's HTML came from, as Navigation Timing says: the service worker (`workerStart` > 0), the HTTP cache (0 bytes transferred), a 304 (Chrome's `deliveryType: "cache"` with bytes transferred, or fewer bytes than the body elsewhere), or the network. | Q8 |
+| `tab.sw-waiting` | warn | A new service worker is installed and waiting. | Q7 |
+| `tab.sw-controlled` | info / pass | A service worker controls the tab (info), or none is registered (pass). Not reported outside a secure context. | Q7 |
+| `tab.sw-cached-page` | warn / info | Cache Storage holds the page, `/` or `/index.html`. warn when its build id differs from the live page's. | Q7 |
+| `tab.assets-removed` | fail | A file this tab loaded, and the live page no longer references, returns 4xx/5xx or an HTML page. | Q6 |
+| `tab.assets-kept` | pass | Every such file still loads, or the live page still references all of them. | Q6 |
+| `tab.assets-not-checked` | info | Files on other origins, past the limit of 50, or whose request failed (usually CORS). | Q6 |
+
 ## Decided
 
 - Thresholds: 300 s for HTML `max-age` (`--html-max-age`) and for the CDN lifetime (`--edge-max-age`), 30 days for hashed assets.
 - `html.heuristic-freshness` is a `fail`, and it checks only the URL given.
 - `--baseline` is in v1. `--out report.json` saves the report a later run compares against.
-
-## Open questions
-
-- The browser console snippet (resources from cache, waiting worker): its own package, or left in the article?
+- The browser console snippet is its own package, `packages/probe`, so a browser extension can reuse it.

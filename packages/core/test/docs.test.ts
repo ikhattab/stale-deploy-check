@@ -18,6 +18,14 @@ test("every CLI check id is documented in docs/checks.md", async () => {
   }
 });
 
+test("every browser probe check id is documented in docs/checks.md", async () => {
+  const checks = await read("docs/checks.md");
+  const source = await read("packages/probe/src/analyze.ts");
+  const ids = [...source.matchAll(/check: "([a-z.-]+)"/g)].map((m) => m[1]!);
+  assert.ok(ids.length > 0);
+  for (const id of ids) assert.ok(checks.includes(`\`${id}\``), `${id} is missing from docs/checks.md`);
+});
+
 test("action.yml runs the current minor version from npm", async () => {
   const { version } = JSON.parse(await read("packages/cli/package.json"));
   const action = await read("action.yml");

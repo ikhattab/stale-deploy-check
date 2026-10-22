@@ -159,13 +159,14 @@ What it won't do: edit your code unless you ask, install packages or build in yo
 
 ```sh
 npm install
-npm run build   # tsc -b, then bundle the CLI
+npm run build   # tsc -b, then bundle the CLI and the probe snippet (packages/probe/dist/stale-deploy-check.snippet.js)
 npm test        # node --test against the TypeScript sources
 ```
 
 ```
 packages/core   fetch-only checks that return findings; runs in Node, Workers, and browsers
 packages/cli    the stale-deploy-check command
+packages/probe  runs inside a tab: is it on the old version, and why (built as a console snippet)
 skills/         the agent skill
 evals/          the skill's test prompts and two example repos
 calibration/    runs the CLI against 50 real sites and compares versions

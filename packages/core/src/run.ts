@@ -129,7 +129,7 @@ function normalizeUrl(target: string): string {
 }
 
 /** Whether an asset is part of this site's deploy: the page's origin, a subdomain of its host, or an origin the caller named. */
-function ownedBy(pageUrl: string, assetOrigins: string[]): (assetUrl: string) => boolean {
+export function ownedBy(pageUrl: string, assetOrigins: string[]): (assetUrl: string) => boolean {
   const page = new URL(pageUrl);
   const site = page.hostname.replace(/^www\./, "");
   const extra = new Set(assetOrigins);
@@ -166,7 +166,7 @@ async function headOrGet(recorder: Recorder, url: string): Promise<RequestRecord
   return (await recorder.request(url, { method: "GET" })).final;
 }
 
-async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
   let next = 0;
   const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
