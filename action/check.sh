@@ -46,6 +46,9 @@ echo "::stop-commands::$token"
 echo "Running stale-deploy-check $(cd "$cli_dir" && "${cli[@]}" --version 2>&1)"
 (cd "$cli_dir" && "${cli[@]}" "${args[@]}") 2>&1 | tee "$dir/report.txt"
 code=${PIPESTATUS[0]}
+# The CLI writes a report whenever it gets to check. Without one, an exit 1 came from npx (a version
+# that isn't published, no network), not from a finding.
+[[ $code == 1 && ! -f "$dir/report.json" ]] && code=2
 echo "::$token::"
 
 {
