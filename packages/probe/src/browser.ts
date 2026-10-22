@@ -4,6 +4,8 @@ import type { CachedPage, NavigationSnapshot, ServiceWorkerSnapshot, TabReport, 
 
 // Requests the page's own code made, including this probe's on an earlier run. They're data, not the build.
 const NOT_ASSETS = new Set(["fetch", "xmlhttprequest", "beacon"]);
+/** Resource Timing's default buffer size. Pages can raise it, so reaching it is a hint, not proof. */
+const RESOURCE_TIMING_BUFFER = 250;
 
 /** Checks the tab this runs in. */
 export async function probe(options: { timeoutMs?: number } = {}): Promise<TabReport> {
@@ -23,12 +25,14 @@ export async function collect(): Promise<TabSnapshot> {
   const url = withoutHash(location.href);
   const buildId = buildIdOf(document);
   const navigation = navigationSnapshot();
+  const resourceTimingFull = performance.getEntriesByType("resource").length >= RESOURCE_TIMING_BUFFER;
   return {
     url,
     loadedAt: new Date(performance.timeOrigin).toISOString(),
     ...(buildId ? { buildId } : {}),
     ...(navigation ? { navigation } : {}),
     assets: loadedAssets(),
+    ...(resourceTimingFull ? { resourceTimingFull } : {}),
     serviceWorker: await serviceWorkerSnapshot(),
     cachedPages: await cachedPages(url),
   };
@@ -141,10 +145,11 @@ function buildIdOf(doc: Document): BuildId | undefined {
   return undefined;
 }
 
-function timing(url: string): { workerStart: number; transferSize: number } | undefined {
-  const entries = performance.getEntriesByName(url, "resource") as PerformanceResourceTiming[];
+function timing(url: string): { workerStart: number; transferSize: number; deliveryType?: string } | undefined {
+  const entries = performance.getEntriesByName(url, "resource") as (PerformanceResourceTiming & { deliveryType?: string })[];
   const last = entries[entries.length - 1];
-  return last ? { workerStart: last.workerStart, transferSize: last.transferSize } : undefined;
+  if (!last) return undefined;
+  return { workerStart: last.workerStart, transferSize: last.transferSize, ...(last.deliveryType !== undefined ? { deliveryType: last.deliveryType } : {}) };
 }
 
 function withoutHash(href: string): string {
