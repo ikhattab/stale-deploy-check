@@ -24,7 +24,8 @@ export interface Context {
   revalidation?: RequestRecord;
   page: ParsedPage;
   assets: AssetResult[];
-  notChecked: { crossOrigin: string[]; overCap: string[]; limit: number };
+  /** Assets on origins that aren't the site's own, and own assets past the --max-assets limit. */
+  notChecked: { otherOrigins: string[]; overCap: string[]; limit: number };
   /** With --baseline: requests for the previous report's assets that this HTML no longer references. */
   baseline?: { checked: RequestRecord[] };
   thresholds: Thresholds;

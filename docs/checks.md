@@ -7,7 +7,7 @@ Section links point at the article: [Q2](https://ihabkhattab.com/blog/deployed-b
 ## CLI: what it requests
 
 1. `GET <url>` with `Accept: text/html`, no cookies, following redirects (each hop recorded). Anything other than a 2xx HTML response ends the run with exit 2.
-2. Parse the HTML for same-origin `<script src>`, `<link rel="stylesheet">` and `<link rel="modulepreload">`. Cap at 20 assets; say so if there were more.
+2. Parse the HTML for `<script src>`, `<link rel="stylesheet">` and `<link rel="modulepreload">` on the site's own origins: the page's origin, subdomains of its host (`static.example.com` for `www.example.com`), and any `--asset-origin`. Cap at 20 assets (`--max-assets`); say so if there were more.
 3. `HEAD` each asset, falling back to `GET` if the server rejects `HEAD`.
 4. If the HTML had an `ETag` or `Last-Modified`, send the same `GET` again with `If-None-Match` / `If-Modified-Since`.
 5. With `--baseline <report.json>`, `HEAD` every asset URL from the previous report.
@@ -41,7 +41,7 @@ Nothing else: no crawling, no guessing paths like `/sw.js`.
 | `assets.short-cache` | warn | Hashed asset with no `max-age`, or `max-age` < 30 days. Browsers ask about files that can't change. | Q3 |
 | `assets.short-cache` | pass | Every hashed asset is cached for at least 30 days. | Q3 |
 | `assets.no-immutable` | info | Hashed asset with a long `max-age` but no `immutable`. | Q3 |
-| `assets.not-checked` | info | Assets on other origins, assets over the `--max-assets` limit, or no assets in the HTML at all. | Q4 |
+| `assets.not-checked` | info | Assets on other origins, assets over the `--max-assets` limit, or no assets in the HTML at all. Names the origin with the most files so it can be added with `--asset-origin`, and says so in the title when nothing was checked at all. | Q4 |
 
 "Has a content hash" is a name heuristic only; we don't hash the bytes. A token counts as a hash when it's at least 6 characters of `[A-Za-z0-9_-]` and has a digit or mixes upper and lower case (so `bundle` and `framework` don't count). Build-target names like `es2015` or `v2` don't count, and neither does a dashed token with a plain word in it (`es2015-polyfills`, `vendors-2`). A URL is hashed when any of these hold:
 

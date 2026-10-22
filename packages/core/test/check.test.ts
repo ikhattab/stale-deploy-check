@@ -118,6 +118,41 @@ describe("check()", () => {
     assert.equal(find(kept, "assets.previous-kept")?.severity, "pass");
   });
 
+  describe("whose assets are checked", () => {
+    // Every host is served by the test server.
+    const anyHost = { fetch: (input: string, init: RequestInit) => fetch(server.url(new URL(input).pathname), init) };
+
+    test("subdomains of the page's host count as the site's own; other origins don't", async () => {
+      const report = await check("https://www.site.test/split/", anyHost);
+      assert.deepEqual(report.assets, ["https://static.site.test/split/app.js"]);
+      assert.equal(find(report, "assets.unhashed-long-cache")?.evidence[0]?.kind, "header");
+      const skipped = find(report, "assets.not-checked")!;
+      assert.equal(skipped.title, "Skipped 1 file on other origins");
+      assert.deepEqual(skipped.evidence, [{ kind: "computed", label: "other origin, not checked", value: "https://assets.cdn.test (1 file)" }]);
+      // vendor.js has no hash, so it reads like a third-party script: no origin is suggested.
+      assert.equal(skipped.fix, undefined);
+    });
+
+    test("assetOrigins adds an asset domain", async () => {
+      const report = await check("https://www.site.test/split/", { ...anyHost, assetOrigins: ["assets.cdn.test"] });
+      assert.deepEqual(report.assets, ["https://static.site.test/split/app.js", "https://assets.cdn.test/split/vendor.js"]);
+      assert.equal(find(report, "assets.not-checked"), undefined);
+    });
+
+    test("when every asset is elsewhere, the finding says nothing was checked and names the origin to add", async () => {
+      const finding = find(await check("https://site.test/elsewhere/", anyHost), "assets.not-checked")!;
+      assert.equal(finding.title, "No scripts or stylesheets were checked: all 2 are on other origins");
+      assert.match(finding.fix!, /--asset-origin https:\/\/assets\.cdn\.test/);
+    });
+
+    test("over the limit only: no talk of other origins", async () => {
+      const finding = find(await check(server.url("/good/"), { maxAssets: 1 }), "assets.not-checked")!;
+      assert.equal(finding.title, "Skipped 2 over the 1-file limit");
+      assert.doesNotMatch(finding.detail, /origin/);
+      assert.match(finding.fix!, /--max-assets 3/);
+    });
+  });
+
   test("ignored checks are dropped and listed", async () => {
     const report = await check(server.url("/bad/"), { ignore: ["html.heuristic-freshness", "not.a.check"] });
     assert.equal(find(report, "html.heuristic-freshness"), undefined);

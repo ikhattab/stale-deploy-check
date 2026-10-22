@@ -49,6 +49,7 @@ describe("exit codes", () => {
     assert.equal((await run("a", "b")).code, 2);
     assert.equal((await run(server.url("/good/"), "--max-assets", "lots")).code, 2);
     assert.equal((await run(server.url("/good/"), "--nope")).code, 2);
+    assert.equal((await run(server.url("/good/"), "--asset-origin", "ftp://assets.example")).code, 2);
   });
 });
 

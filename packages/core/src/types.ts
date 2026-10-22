@@ -56,7 +56,7 @@ export interface Report {
   /** Final URL after redirects. */
   resolved: string;
   checkedAt: string;
-  /** Every same-origin asset URL the HTML references, checked or not. A later run's --baseline reads this. */
+  /** Every asset URL the HTML references on the site's own origins, checked or not. A later run's --baseline reads this. */
   assets: string[];
   /** Every request the run made, so a finding's evidence can be traced. */
   requests: RequestRecord[];

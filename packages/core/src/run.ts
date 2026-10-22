@@ -30,6 +30,11 @@ export interface CheckOptions {
   baseline?: Pick<Report, "assets">;
   /** Check ids to drop from the findings. */
   ignore?: string[];
+  /**
+   * Other origins that serve this site's own files, like an asset domain or a CloudFront distribution.
+   * The page's own origin and its host's subdomains always count.
+   */
+  assetOrigins?: string[];
 }
 
 const MAX_BASELINE_REQUESTS = 50;
@@ -37,6 +42,7 @@ const CONCURRENCY = 6;
 
 export async function check(target: string, options: CheckOptions = {}): Promise<Report> {
   const url = normalizeUrl(target);
+  const assetOrigins = (options.assetOrigins ?? []).map((o) => new URL(normalizeUrl(o)).origin);
   const thresholds = { ...DEFAULT_THRESHOLDS, ...options.thresholds };
   const maxAssets = options.maxAssets ?? 20;
   const recorder = new Recorder({
@@ -52,10 +58,10 @@ export async function check(target: string, options: CheckOptions = {}): Promise
   const parsed = parsePage(page.body ?? "", doc.url);
   const revalidation = await revalidate(recorder, doc);
 
-  const origin = new URL(doc.url).origin;
-  const sameOrigin = parsed.assets.filter((a) => new URL(a).origin === origin);
-  const crossOrigin = parsed.assets.filter((a) => new URL(a).origin !== origin);
-  const assets = await mapLimit(sameOrigin.slice(0, maxAssets), CONCURRENCY, async (assetUrl): Promise<AssetResult> => {
+  const isOwn = ownedBy(doc.url, assetOrigins);
+  const own = parsed.assets.filter(isOwn);
+  const otherOrigins = parsed.assets.filter((a) => !isOwn(a));
+  const assets = await mapLimit(own.slice(0, maxAssets), CONCURRENCY, async (assetUrl): Promise<AssetResult> => {
     const record = await headOrGet(recorder, assetUrl);
     const version = versionParam(assetUrl);
     return { url: assetUrl, record, hashed: hasContentHash(assetUrl), ...(version ? { versionParam: version } : {}) };
@@ -63,7 +69,7 @@ export async function check(target: string, options: CheckOptions = {}): Promise
 
   let baseline: Context["baseline"];
   if (options.baseline) {
-    const current = new Set(sameOrigin);
+    const current = new Set(own);
     const previous = options.baseline.assets.filter((a) => !current.has(a)).slice(0, MAX_BASELINE_REQUESTS);
     baseline = { checked: await mapLimit(previous, CONCURRENCY, (a) => headOrGet(recorder, a)) };
   }
@@ -73,7 +79,7 @@ export async function check(target: string, options: CheckOptions = {}): Promise
     ...(revalidation ? { revalidation } : {}),
     page: parsed,
     assets,
-    notChecked: { crossOrigin, overCap: sameOrigin.slice(maxAssets), limit: maxAssets },
+    notChecked: { otherOrigins, overCap: own.slice(maxAssets), limit: maxAssets },
     ...(baseline ? { baseline } : {}),
     thresholds,
   };
@@ -88,7 +94,7 @@ export async function check(target: string, options: CheckOptions = {}): Promise
     target,
     resolved: doc.url,
     checkedAt: new Date().toISOString(),
-    assets: sameOrigin,
+    assets: own,
     requests: recorder.requests,
     findings,
     ignored,
@@ -112,6 +118,17 @@ function normalizeUrl(target: string): string {
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") throw new CheckError("invalid-url", `only http and https URLs can be checked, not ${url.protocol}`);
   return url.href;
+}
+
+/** Whether an asset is part of this site's deploy: the page's origin, a subdomain of its host, or an origin the caller named. */
+function ownedBy(pageUrl: string, assetOrigins: string[]): (assetUrl: string) => boolean {
+  const page = new URL(pageUrl);
+  const site = page.hostname.replace(/^www\./, "");
+  const extra = new Set(assetOrigins);
+  return (assetUrl) => {
+    const { origin, hostname } = new URL(assetUrl);
+    return origin === page.origin || extra.has(origin) || hostname === site || hostname.endsWith(`.${site}`);
+  };
 }
 
 function assertHtml(doc: RequestRecord): void {

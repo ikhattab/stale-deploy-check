@@ -14,6 +14,9 @@ Options:
   --baseline <file>      A previous report: check that its old assets still load
   --strict               Exit 1 on warnings too, not just failures
   --ignore <check-id>    Drop a finding by id (repeatable)
+  --asset-origin <url>   Another origin that serves this site's files, like an
+                         asset domain or CDN (repeatable). Subdomains of the
+                         page's host are always checked.
   --html-max-age <s>     Seconds the HTML may be reused without asking before it fails (default 300)
   --edge-max-age <s>     Seconds a CDN may keep the HTML before it warns (default 300)
   --max-assets <n>       How many scripts and stylesheets to check (default 20)
@@ -47,6 +50,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
         baseline: { type: "string" },
         strict: { type: "boolean", default: false },
         ignore: { type: "string", multiple: true, default: [] },
+        "asset-origin": { type: "string", multiple: true, default: [] },
         "html-max-age": { type: "string" },
         "edge-max-age": { type: "string" },
         "max-assets": { type: "string" },
@@ -81,6 +85,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
   try {
     options = {
       ignore: values.ignore,
+      assetOrigins: values["asset-origin"],
       thresholds: {
         ...optionalInt(values["html-max-age"], "--html-max-age", (n) => ({ htmlMaxAge: n })),
         ...optionalInt(values["edge-max-age"], "--edge-max-age", (n) => ({ edgeMaxAge: n })),

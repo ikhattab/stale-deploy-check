@@ -70,6 +70,20 @@ const routes: Record<string, Route> = {
     headers: { "content-type": "text/html", "cache-control": "no-cache" },
     body: html(`<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js")</script>`),
   }),
+  // Scripts on a subdomain and on an unrelated asset domain. Tests serve every host from this server.
+  "/split/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "no-cache" },
+    body: html(`
+      <script src="https://static.site.test/split/app.js"></script>
+      <script src="https://assets.cdn.test/split/vendor.js"></script>`),
+  }),
+  "/split/app.js": asset("public, max-age=604800"),
+  "/split/vendor.js": asset("public, max-age=604800"),
+  "/elsewhere/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "no-cache" },
+    body: html(`<script src="https://assets.cdn.test/split/vendor.js"></script><script src="https://assets.cdn.test/split/app.js"></script>`),
+  }),
+
   // An asset server that rejects HEAD.
   "/head405/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/head405/app.9c8b7a.js"></script>`) }),
   "/head405/app.9c8b7a.js": (req) => (req.method === "HEAD" ? { status: 405 } : asset(YEAR)(req)),

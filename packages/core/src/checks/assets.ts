@@ -1,6 +1,7 @@
 import { browserFreshness, parseCacheControl, type BrowserFreshness } from "../cache-control.ts";
 import { DAY, formatDuration } from "../duration.ts";
 import { learn } from "../links.ts";
+import { hasContentHash } from "../naming.ts";
 import type { Evidence, Finding } from "../types.ts";
 import { header, plural, status, type AssetResult, type Context } from "./context.ts";
 
@@ -129,8 +130,8 @@ export function assetChecks(ctx: Context): Finding[] {
     });
   }
 
-  const { crossOrigin, overCap, limit } = ctx.notChecked;
-  if (ctx.assets.length === 0 && crossOrigin.length === 0) {
+  const { otherOrigins, overCap, limit } = ctx.notChecked;
+  if (ctx.assets.length === 0 && otherOrigins.length === 0) {
     findings.push({
       ...base,
       check: "assets.not-checked",
@@ -140,20 +141,39 @@ export function assetChecks(ctx: Context): Finding[] {
       evidence: [],
       learnMore: learn.hashing,
     });
-  } else if (crossOrigin.length > 0 || overCap.length > 0) {
+  } else if (otherOrigins.length > 0 || overCap.length > 0) {
+    const byOrigin = countByOrigin(otherOrigins);
+    const noneChecked = ctx.assets.length === 0;
+    // Name an origin to add only when it looks like build output, so analytics and widget hosts aren't suggested.
+    const suggest = byOrigin.find(([origin]) => noneChecked || otherOrigins.some((url) => url.startsWith(`${origin}/`) && hasContentHash(url)))?.[0];
     const parts = [
-      crossOrigin.length > 0 ? `${plural(crossOrigin.length, "file")} on other origins` : "",
+      otherOrigins.length > 0 ? `${plural(otherOrigins.length, "file")} on other origins` : "",
       overCap.length > 0 ? `${overCap.length} over the ${limit}-file limit` : "",
+    ].filter(Boolean);
+    const detail = [
+      otherOrigins.length > 0
+        ? "Only files on the page's own origin and its subdomains are checked, since third-party files aren't part of your deploy. " +
+          (noneChecked
+            ? "Every script and stylesheet is on another origin, so none of the hashing or lifetime checks ran. If they're your own build files on an asset domain, nothing above covers them."
+            : "If some of your own files live on a separate asset domain, they weren't checked.")
+        : "",
+      overCap.length > 0 ? `The limit is ${plural(limit, "file")} per run.` : "",
+    ].filter(Boolean);
+    const fixes = [
+      suggest ? `If ${suggest} serves your own files, add it as an asset origin (--asset-origin ${suggest}).` : "",
+      overCap.length > 0 ? `Raise the limit to check them all (--max-assets ${ctx.assets.length + overCap.length}).` : "",
     ].filter(Boolean);
     findings.push({
       ...base,
       check: "assets.not-checked",
       severity: "info",
-      title: `Skipped ${parts.join(" and ")}`,
-      detail:
-        "Only files on the page's own origin are checked, since third-party files aren't part of your deploy. " +
-        "If your assets live on a separate domain, they weren't checked.",
-      evidence: [...crossOrigin, ...overCap].map((url) => ({ kind: "computed", label: "not checked", value: url }) satisfies Evidence),
+      title: noneChecked ? `No scripts or stylesheets were checked: all ${otherOrigins.length} are on other origins` : `Skipped ${parts.join(" and ")}`,
+      detail: detail.join(" "),
+      evidence: [
+        ...byOrigin.map(([origin, n]) => ({ kind: "computed", label: "other origin, not checked", value: `${origin} (${plural(n, "file")})` }) satisfies Evidence),
+        ...overCap.map((url) => ({ kind: "computed", label: "over the limit, not checked", value: url }) satisfies Evidence),
+      ],
+      ...(fixes.length > 0 ? { fix: fixes.join(" ") } : {}),
       learnMore: learn.hashing,
     });
   }
@@ -164,6 +184,16 @@ export function assetChecks(ctx: Context): Finding[] {
 /** Seconds a browser may reuse the response without asking. */
 function lifetimeOf(freshness: BrowserFreshness): number {
   return freshness.kind === "explicit" || freshness.kind === "heuristic" ? freshness.seconds : 0;
+}
+
+/** Origins and how many files each serves, most first. */
+function countByOrigin(urls: string[]): [string, number][] {
+  const counts = new Map<string, number>();
+  for (const url of urls) {
+    const { origin } = new URL(url);
+    counts.set(origin, (counts.get(origin) ?? 0) + 1);
+  }
+  return [...counts].sort((a, b) => b[1] - a[1]);
 }
 
 function cacheEvidence(asset: AssetResult): Evidence {
