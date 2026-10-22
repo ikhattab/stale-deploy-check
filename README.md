@@ -166,6 +166,8 @@ action.yml      the GitHub Action; action/check.sh does the work, and CI runs it
 - [docs/checks.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/checks.md): every check, what triggers it, and where the article explains it
 - [docs/findings.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/findings.md): the finding and report format
 
+Releases: push a `vX.Y.Z` tag that matches `packages/cli/package.json`. [`release.yml`](https://github.com/ikhattab/stale-deploy-check/blob/main/.github/workflows/release.yml) tests the tag and, once a maintainer approves the `npm` environment, publishes to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers) and provenance. After npm lists the version, move the `v0` tag to it for the action.
+
 ## License
 
 MIT

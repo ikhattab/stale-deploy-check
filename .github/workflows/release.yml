@@ -1,0 +1,44 @@
+name: Release
+
+# Publishes the CLI to npm when a version tag is pushed. npm trusted publishing signs in with this
+# workflow's OIDC token, so there's no npm token anywhere, and the package gets provenance.
+# The npm environment waits for a maintainer to approve the run.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # No dependency cache: a release shouldn't build from anything an earlier run left behind.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: The tag matches the package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=$(node -p 'require("./packages/cli/package.json").version')
+          if [[ "$TAG" != "v$version" ]]; then
+            echo "::error::$TAG doesn't match packages/cli/package.json ($version)"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run check
+      - run: npm run typecheck
+      - run: npm publish
+        working-directory: packages/cli
+
