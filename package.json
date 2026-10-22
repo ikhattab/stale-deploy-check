@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "tsc -b packages/core packages/cli && node scripts/bundle.mjs",
-    "typecheck": "tsc -b packages/core packages/cli --noEmit",
+    "typecheck": "tsc -b packages/core packages/cli",
     "test": "node --conditions=source --test 'packages/*/test/*.test.ts'",
     "check": "npm run build && npm test"
   },
