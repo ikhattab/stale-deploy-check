@@ -16,7 +16,7 @@ After a deploy, an old copy of your app can live in four places. Two of them can
 
 | Where | What goes wrong | CLI | Agent skill |
 | --- | --- | --- | --- |
-| Browser HTTP cache | HTML reused without asking; unhashed scripts cached for days | ✓ live headers | ✓ the host config that sets them |
+| Browser HTTP cache | HTML reused without asking; unhashed scripts cached for days; a missing file's 404 kept for a year | ✓ live headers | ✓ the host config that sets them |
 | CDN | The edge keeps old HTML until it expires or is purged | ✓ cache status, edge lifetime | ✓ purge step in the deploy |
 | Open tabs | Old code requests chunks the deploy deleted: blank screen | ✓ with `--baseline` | ✓ deploy deletes, no reload on chunk errors |
 | Service worker | A new worker waits until every tab closes | detects one | ✓ the update flow |
@@ -45,7 +45,7 @@ HTTP cache
 
 Point it at production or a preview deploy on your real host, not a local dev server: dev servers don't hash file names and send their own headers, so every finding would be about the dev server.
 
-It makes a handful of requests per run: the page, a conditional request for it, and a `HEAD` for each script and stylesheet (up to 20). It doesn't crawl, send cookies, or guess paths.
+It makes a handful of requests per run: the page, a conditional request for it, a `HEAD` for each script and stylesheet (up to 20), and one for a made-up file next to them, to see how long a missing file's 404 is kept. It doesn't crawl or send cookies.
 
 ### Options
 
@@ -100,7 +100,7 @@ The step runs after the deploy, so a red job means the deploy is already live: i
 **Other CI systems.** Save each report with `--out` and pass the previous one back with `--baseline`:
 
 ```sh
-npx -y stale-deploy-check@0.3 https://example.com/ --baseline previous-report.json --out report.json
+npx -y stale-deploy-check@0.4 https://example.com/ --baseline previous-report.json --out report.json
 ```
 
 Keep `report.json` somewhere that outlives the job (a cache, an artifact, a bucket) and restore it as `previous-report.json` next time. Pin the version while the project is pre-1.0, since findings can change between minor versions. If a finding doesn't apply to your site, `--ignore` it by id rather than dropping the step.
