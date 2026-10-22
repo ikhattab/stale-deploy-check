@@ -40,6 +40,10 @@ const routes: Record<string, Route> = {
   "/good/assets/settings.a71f30.js": asset(YEAR),
   "/good/assets/index-BxKaQzWe.css": asset(YEAR),
   "/good/assets/kept.222bbb.js": asset(YEAR),
+  // How a deleted file comes back from S3 behind CloudFront: 403 when the reader can't list the bucket,
+  // or the SPA's index.html with a 200 when an error response is mapped to it.
+  "/good/assets/forbidden.333ccc.js": () => ({ status: 403, headers: { "content-type": "application/xml" }, body: "<Error><Code>AccessDenied</Code></Error>" }),
+  "/good/assets/fallback.444ddd.js": () => ({ headers: { "content-type": "text/html" }, body: html("") }),
 
   // A Cloudflare zone cache holding HTML that says no-cache.
   "/edge/": () => ({

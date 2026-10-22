@@ -73,7 +73,7 @@ Look in CI workflows and deploy scripts for a purge after the upload: `aws cloud
 
 Layer `open-tab` · `#question-6-a-blank-screen-with-no-cache-involved`
 
-Tabs opened before a deploy still run old code, which loads old hashed chunks on demand. If the deploy deleted them, those requests 404.
+Tabs opened before a deploy still run old code, which loads old hashed chunks on demand. If the deploy deleted them, those requests fail: a 404, a 403 from S3 behind CloudFront, or `index.html` from an error rule that maps missing files to the app shell.
 
 - **fail**: the deploy deletes files the new build doesn't have: `aws s3 sync --delete`, `rsync --delete`, `gsutil rsync -d`, `az storage blob sync --delete-destination true`, a step that empties the bucket or web root first.
 - **warn**: the platform replaces the whole site on each deploy (Netlify, Cloudflare Pages or Workers static assets, Firebase, a fresh container image), so old hashed files are gone unless something keeps them. On Vercel, Skew Protection addresses this; check whether it's on before warning. Elsewhere the usual fix is copying the previous deploy's hashed assets into the new build output, or uploading to a bucket without deleting.

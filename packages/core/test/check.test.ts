@@ -118,6 +118,20 @@ describe("check()", () => {
     assert.equal(find(kept, "assets.previous-kept")?.severity, "pass");
   });
 
+  test("baseline: a 403 or an HTML page in place of a script counts as gone", async () => {
+    const forbidden = server.url("/good/assets/forbidden.333ccc.js");
+    const fallback = server.url("/good/assets/fallback.444ddd.js");
+    const report = await check(server.url("/good/"), { baseline: { assets: [forbidden, fallback, server.url("/good/assets/kept.222bbb.js")] } });
+    const removed = find(report, "assets.previous-removed")!;
+    assert.equal(removed.severity, "fail");
+    assert.equal(removed.title, "2 files from the previous deploy no longer load");
+    assert.deepEqual(removed.evidence.flatMap((e) => (e.kind === "status" ? [e.url] : [])), [forbidden, fallback]);
+    assert.deepEqual(removed.evidence.find((e) => e.kind === "header"), { kind: "header", url: fallback, name: "content-type", value: "text/html" });
+    assert.match(removed.detail, /403/);
+    assert.match(removed.detail, /HTML page/);
+    assert.equal(find(report, "assets.previous-kept"), undefined);
+  });
+
   describe("whose assets are checked", () => {
     // Every host is served by the test server.
     const anyHost = { fetch: (input: string, init: RequestInit) => fetch(server.url(new URL(input).pathname), init) };

@@ -77,7 +77,7 @@ Two rules make the report trustworthy:
 
 Reading code tells you what should happen. When the main finding can be checked in a few minutes, check it, because "I reproduced it" is worth more to the user than "this should cause it". Some examples:
 
-- **Suspected deleted chunks:** build the app twice in a scratch copy (never in the user's repo), then compare chunk names. Or request an old hashed URL from the live site and see whether it 404s.
+- **Suspected deleted chunks:** build the app twice in a scratch copy (never in the user's repo), then compare chunk names. Or request an old hashed URL from the live site and see whether it still loads. A 403 from S3, or `index.html` served in its place by a CloudFront error rule, means it's gone just as surely as a 404.
 - **Suspected service worker behavior:** build in a scratch copy and read the generated worker to see what it actually does on install and on message.
 - **A pre-release check:** request the exact URLs that are about to change, such as the new page or the index that will link to it, and check how they're cached right now.
 

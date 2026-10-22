@@ -1,6 +1,6 @@
 import { learn } from "../links.ts";
-import type { Finding } from "../types.ts";
-import { plural, status, type Context } from "./context.ts";
+import type { Finding, RequestRecord } from "../types.ts";
+import { header, plural, status, type Context } from "./context.ts";
 
 export function pageChecks(ctx: Context): Finding[] {
   const findings: Finding[] = [];
@@ -53,20 +53,26 @@ export function baselineChecks(ctx: Context): Finding[] {
   if (!ctx.baseline) return [];
   const { checked } = ctx.baseline;
   const base = { layer: "open-tab", source: "headers", learnMore: learn.openTab } as const;
-  const gone = checked.filter((r) => r.status === 404 || r.status === 410);
+  const gone = checked.filter((r) => r.status >= 400 || servesHtml(r));
   const kept = checked.filter((r) => !gone.includes(r));
 
   if (gone.length > 0) {
+    const why = [
+      gone.some((r) => r.status === 403) ? "S3 answers 403 instead of 404 for a missing file when the reader isn't allowed to list the bucket, which is the usual setup behind CloudFront." : "",
+      gone.some(servesHtml) ? "An HTML page came back where a script or stylesheet should be: a CDN error rule that serves index.html for missing files, which a browser can't run as code." : "",
+    ].filter(Boolean);
     return [
       {
         ...base,
         check: "assets.previous-removed",
         severity: "fail",
-        title: `${plural(gone.length, "file")} from the previous deploy ${gone.length === 1 ? "is" : "are"} gone`,
-        detail:
+        title: `${plural(gone.length, "file")} from the previous deploy no longer load`,
+        detail: [
           "Tabs opened before this deploy still run the old code, which loads these URLs on demand (a route, a lazy component). " +
-          "They now fail, and an unhandled failed import() usually means a blank screen.",
-        evidence: gone.map(status),
+            "They now fail, and an unhandled failed import() usually means a blank screen.",
+          ...why,
+        ].join(" "),
+        evidence: gone.flatMap((r) => (servesHtml(r) ? [status(r), header(r, "content-type")] : [status(r)])),
         fix: "Keep old assets for a few days after a deploy instead of deleting them, and reload once when a dynamic import fails.",
       },
     ];
@@ -85,4 +91,9 @@ export function baselineChecks(ctx: Context): Finding[] {
       evidence: kept.map(status),
     },
   ];
+}
+
+/** A script or stylesheet URL answered with an HTML page, like a single-page app's fallback for missing paths. */
+function servesHtml(record: RequestRecord): boolean {
+  return /\.(?:[cm]?js|css)$/.test(new URL(record.url).pathname) && /text\/html/i.test(record.headers["content-type"] ?? "");
 }

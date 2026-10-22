@@ -72,7 +72,7 @@ Every CDN finding says which edge answered (from `cf-ray`, `x-served-by`, etc. w
 
 | Check id | Severity | Condition | Learn |
 | --- | --- | --- | --- |
-| `assets.previous-removed` | fail | With `--baseline`: an asset URL from the previous report now returns 404. Tabs opened before the deploy will fail to load it. | Q6 |
+| `assets.previous-removed` | fail | With `--baseline`: an asset URL from the previous report no longer loads: any 4xx or 5xx (S3 behind CloudFront answers 403 for a missing file), or an HTML page where a script or stylesheet should be (a CDN error rule serving `index.html`). Tabs opened before the deploy will fail to load it. | Q6 |
 | `assets.previous-kept` | pass | With `--baseline`: every previous asset still loads. | Q6 |
 
 ### Proving it
