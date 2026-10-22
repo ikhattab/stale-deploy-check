@@ -37,11 +37,13 @@ export class Recorder {
   #fetch: FetchLike;
   #timeoutMs: number;
   #userAgent: string;
+  #onRequest: ((record: RequestRecord) => void) | undefined;
 
-  constructor(options: { fetch: FetchLike; timeoutMs: number; userAgent: string }) {
+  constructor(options: { fetch: FetchLike; timeoutMs: number; userAgent: string; onRequest?: (record: RequestRecord) => void }) {
     this.#fetch = options.fetch;
     this.#timeoutMs = options.timeoutMs;
     this.#userAgent = options.userAgent;
+    this.#onRequest = options.onRequest;
   }
 
   async request(url: string, options: RequestOptions): Promise<Fetched> {
@@ -81,6 +83,7 @@ export class Recorder {
       };
       hops.push(record);
       this.requests.push(record);
+      this.#onRequest?.(record);
 
       if (!redirected) return { hops, final: record, ...(body !== undefined ? { body } : {}) };
       if (hops.length > MAX_REDIRECTS) throw new CheckError("redirects", `more than ${MAX_REDIRECTS} redirects starting at ${url}`);

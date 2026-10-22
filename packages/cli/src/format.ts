@@ -14,13 +14,14 @@ export interface Style {
   red(s: string): string;
   yellow(s: string): string;
   green(s: string): string;
+  cyan(s: string): string;
   dim(s: string): string;
   bold(s: string): string;
 }
 
 export function makeStyle(color: boolean): Style {
   const wrap = (open: number, close: number) => (s: string) => (color ? `\x1b[${open}m${s}\x1b[${close}m` : s);
-  return { red: wrap(31, 39), yellow: wrap(33, 39), green: wrap(32, 39), dim: wrap(2, 22), bold: wrap(1, 22) };
+  return { red: wrap(31, 39), yellow: wrap(33, 39), green: wrap(32, 39), cyan: wrap(36, 39), dim: wrap(2, 22), bold: wrap(1, 22) };
 }
 
 // C0 and C1 controls (newlines included) and bidi overrides. Headers, URLs and <meta> content come from the
@@ -52,7 +53,15 @@ function cleanFinding(f: Finding): Finding {
   };
 }
 
-export function formatReport(unsafe: Report, options: { verbose: boolean; style: Style; width: number }): string {
+export interface FormatOptions {
+  verbose: boolean;
+  style: Style;
+  width: number;
+  /** For someone at a terminal: commands worth running next. Left out for pipes, CI and agents. */
+  hints?: { prompt: string };
+}
+
+export function formatReport(unsafe: Report, options: FormatOptions): string {
   const { style, verbose } = options;
   const report: Report = {
     ...unsafe,
@@ -84,7 +93,7 @@ export function formatReport(unsafe: Report, options: { verbose: boolean; style:
       .filter((f) => f.layer === layer && (verbose || f.severity !== "pass"))
       .sort((a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
     if (findings.length === 0) continue;
-    lines.push("", style.bold(heading));
+    lines.push("", sectionHeading(heading, findings, style, width));
     for (const f of findings) lines.push(...formatFinding(f, marks[f.severity], { style, verbose, width }));
   }
 
@@ -97,17 +106,41 @@ export function formatReport(unsafe: Report, options: { verbose: boolean; style:
       width,
     ).map(style.dim),
   );
+
+  if (options.hints) {
+    const next: string[] = [];
+    // The command gets a line of its own, so it can be selected and copied in one go.
+    if (s.fail + s.warn > 0) next.push("Have your AI coding agent fix these. Copy a prompt for it, then paste it in:", `  ${style.cyan(options.hints.prompt)}`);
+    if (!verbose) next.push("Add --verbose for the evidence behind each finding, and its check id for --ignore.");
+    if (next.length) lines.push("", style.bold("Next"), ...next.map((n) => `  ${n}`));
+  }
   return lines.join("\n");
+}
+
+function sectionHeading(heading: string, findings: Finding[], style: Style, width: number): string {
+  const count = (severity: Severity) => findings.filter((f) => f.severity === severity).length;
+  const counts = [
+    count("fail") ? style.red(`${count("fail")} fail`) : "",
+    count("warn") ? style.yellow(`${count("warn")} warn`) : "",
+  ].filter(Boolean);
+  const plain = counts.map((c) => c.replace(/\x1b\[\d+m/g, "")).join(" · ");
+  const rule = "─".repeat(Math.max(3, width - heading.length - plain.length - (plain ? 2 : 1)));
+  return `${style.bold(heading)} ${style.dim(rule)}${plain ? ` ${counts.join(style.dim(" · "))}` : ""}`;
 }
 
 function formatFinding(f: Finding, mark: string, options: { style: Style; verbose: boolean; width: number }): string[] {
   const { style, verbose, width } = options;
   const indent = "    ";
-  const lines = [`  ${mark} ${f.title}`];
+  const title = f.severity === "fail" || f.severity === "warn" ? style.bold(f.title) : f.title;
+  const lines = [`  ${mark} ${title}`];
   if (f.severity === "pass" && !verbose) return lines;
   lines.push(...wrap(f.detail, width - indent.length).map((l) => indent + l));
-  if (f.fix) lines.push(...wrap(`Fix: ${f.fix}`, width - indent.length).map((l) => indent + l));
+  if (f.fix) {
+    const [first = "", ...rest] = wrap(`Fix: ${f.fix}`, width - indent.length);
+    lines.push(indent + style.cyan("Fix:") + first.slice(4), ...rest.map((l) => indent + l));
+  }
   if (verbose) {
+    lines.push(style.dim(`${indent}  check: ${f.check}`));
     for (const e of f.evidence) {
       const text =
         e.kind === "header"

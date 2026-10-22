@@ -30,7 +30,7 @@ npx stale-deploy-check https://example.com/
 ```txt
 https://example.com/  →  1 fail · 1 warn · 3 info
 
-HTTP cache
+HTTP cache ──────────────────────────────────────────────────── 1 fail · 1 warn
   ✗ Browsers may reuse the HTML for about 1.6 hours without asking
     The HTML has no Cache-Control lifetime and no Expires, so browsers guess
     one: usually 10% of the time since Last-Modified. It was last modified 16.5
@@ -45,6 +45,14 @@ HTTP cache
 
 Point it at production or a preview deploy on your real host, not a local dev server: dev servers don't hash file names and send their own headers, so every finding would be about the dev server.
 
+To have a coding agent fix what it found, ask for a prompt instead of the report and paste it into the agent, in the site's repo:
+
+```sh
+npx stale-deploy-check https://example.com/ --prompt | pbcopy
+```
+
+The prompt lists each failure and warning with its evidence and suggested fix, says where headers usually come from in a repo, and ends with the command that checks the fix. Run at a terminal, the report ends with this command whenever there's something to fix. The prompt quotes headers and URLs from the site, and tells the agent to treat them as data. To also review the service worker and deploy code, use the [agent skill](#agent-skill) instead.
+
 It makes a handful of requests per run: the page, a conditional request for it, a `HEAD` for each script and stylesheet (up to 20), and one for a made-up file next to them, to see how long a missing file's 404 is kept. It doesn't crawl or send cookies.
 
 ### Options
@@ -52,6 +60,7 @@ It makes a handful of requests per run: the page, a conditional request for it, 
 | Option | What it does |
 | --- | --- |
 | `--json` | Print the full report as JSON instead of text |
+| `--prompt` | Print a prompt for your AI coding agent to fix what was found, instead of the report. Try `--prompt \| pbcopy`. |
 | `--out <file>` | Also save the JSON report, for use as the next run's `--baseline` |
 | `--baseline <file>` | A previous report: check that the files it referenced still load |
 | `--asset-origin <url>` | Another origin that serves your files, like an asset domain or a CDN distribution. Repeatable. Subdomains of the page's host are always checked. |

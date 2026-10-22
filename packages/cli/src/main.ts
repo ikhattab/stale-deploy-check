@@ -1,7 +1,9 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { check, CheckError, VERSION, type CheckOptions, type Report } from "@stale-deploy-check/core";
-import { formatReport, makeStyle } from "./format.ts";
+import { clean, formatReport, makeStyle } from "./format.ts";
+import { startProgress } from "./progress.ts";
+import { buildPrompt, shellQuote } from "./prompt.ts";
 
 const HELP = `Usage: stale-deploy-check <url> [options]
 
@@ -10,6 +12,8 @@ the HTML's cache headers, hashed asset names, and the CDN in front of it.
 
 Options:
   --json                 Print the report as JSON instead of text
+  --prompt               Print a prompt for your AI coding agent to fix what was found,
+                         instead of the report (try: --prompt | pbcopy)
   --out <file>           Also write the JSON report to a file (use it as the next --baseline)
   --baseline <file>      A previous report: check that its old assets still load
   --strict               Exit 1 on warnings too, not just failures
@@ -34,6 +38,12 @@ export interface Io {
   stderr: (s: string) => void;
   color: boolean;
   width: number;
+  /** stderr is a terminal: show a progress line while checking. */
+  progress?: boolean;
+  /** stdout is a terminal with a person at it: end the report with what to run next. */
+  interactive?: boolean;
+  /** The command that puts stdin on the clipboard, like pbcopy. */
+  clipboard?: string | undefined;
   fetch?: CheckOptions["fetch"];
 }
 
@@ -46,6 +56,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
       allowPositionals: true,
       options: {
         json: { type: "boolean", default: false },
+        prompt: { type: "boolean", default: false },
         out: { type: "string" },
         baseline: { type: "string" },
         strict: { type: "boolean", default: false },
@@ -80,6 +91,10 @@ export async function main(argv: string[], io: Io): Promise<number> {
     return 2;
   }
   const target = positionals[0]!;
+  if (values.json && values.prompt) {
+    io.stderr(`Use --json or --prompt, not both.\n`);
+    return 2;
+  }
 
   let options: CheckOptions;
   try {
@@ -100,23 +115,43 @@ export async function main(argv: string[], io: Io): Promise<number> {
     return 2;
   }
 
+  const color = io.color && !values["no-color"];
+  const progress = io.progress ? startProgress(io.stderr, { target: clean(target), width: io.width, color }) : undefined;
   let report: Report;
   try {
-    report = await check(target, options);
+    report = await check(target, { ...options, ...(progress ? { onRequest: progress.request } : {}) });
   } catch (error) {
+    progress?.stop();
     if (error instanceof CheckError) {
-      io.stderr(`Couldn't check ${target}: ${error.message}\n`);
+      io.stderr(`Couldn't check ${clean(target)}: ${error.message}\n`);
       return 2;
     }
     throw error;
   }
+  progress?.stop();
+
+  // What reproduces this run's findings, minus the flags that only change how they're shown.
+  const rerunArgs = [
+    report.resolved,
+    ...values["asset-origin"].flatMap((o) => ["--asset-origin", o]),
+    ...values.ignore.flatMap((id) => ["--ignore", id]),
+    ...(values["html-max-age"] ? ["--html-max-age", values["html-max-age"]] : []),
+    ...(values["edge-max-age"] ? ["--edge-max-age", values["edge-max-age"]] : []),
+  ];
+  const command = (...extra: string[]) =>
+    ["npx", `stale-deploy-check@${VERSION.split(".").slice(0, 2).join(".")}`, ...[...rerunArgs, ...extra].map((a) => shellQuote(clean(a)))].join(" ");
 
   if (values.out) await writeFile(values.out, `${JSON.stringify(report, null, 2)}\n`);
   if (values.json) {
     io.stdout(`${JSON.stringify(report, null, 2)}\n`);
+  } else if (values.prompt) {
+    const prompt = buildPrompt(report, { rerun: command() });
+    if (prompt) io.stdout(prompt);
+    else io.stderr(`Nothing to fix: no failures or warnings on ${clean(report.resolved)}.\n`);
   } else {
-    const style = makeStyle(io.color && !values["no-color"]);
-    io.stdout(`${formatReport(report, { verbose: values.verbose, style, width: io.width })}\n`);
+    const style = makeStyle(color);
+    const hints = io.interactive ? { prompt: `${command("--prompt")}${io.clipboard ? ` | ${io.clipboard}` : ""}` } : undefined;
+    io.stdout(`${formatReport(report, { verbose: values.verbose, style, width: io.width, ...(hints ? { hints } : {}) })}\n`);
   }
 
   const failing = report.summary.fail + (values.strict ? report.summary.warn : 0);

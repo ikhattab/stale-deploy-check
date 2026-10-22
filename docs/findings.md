@@ -120,7 +120,7 @@ Human output groups findings by layer in request order (service worker, HTTP cac
 ```txt
 https://example.com/  →  2 fail · 3 warn · 1 info
 
-HTTP cache
+HTTP cache ──────────────────────────────────────────────────── 2 fail · 1 warn
   ✗ Browsers may reuse index.html for about 3 days without asking
     Last-Modified is 31 days old and there is no Cache-Control.
     Fix: Cache-Control: no-cache, plus an ETag.

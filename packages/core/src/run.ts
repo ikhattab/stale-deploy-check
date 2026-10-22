@@ -35,6 +35,8 @@ export interface CheckOptions {
    * The page's own origin and its host's subdomains always count.
    */
   assetOrigins?: string[];
+  /** Called after each response, for progress output. The same records end up in the report's requests. */
+  onRequest?: (record: RequestRecord) => void;
 }
 
 const MAX_BASELINE_REQUESTS = 50;
@@ -49,6 +51,7 @@ export async function check(target: string, options: CheckOptions = {}): Promise
     fetch: options.fetch ?? ((input, init) => fetch(input, init)),
     timeoutMs: options.timeoutMs ?? 10_000,
     userAgent: options.userAgent ?? `stale-deploy-check/${VERSION} (+${ARTICLE})`,
+    ...(options.onRequest ? { onRequest: options.onRequest } : {}),
   });
 
   const page = await recorder.request(url, { method: "GET", headers: { accept: "text/html,application/xhtml+xml" }, readBody: true });
