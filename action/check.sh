@@ -5,7 +5,7 @@
 set -uo pipefail
 set -f # check ids and origins are split on whitespace, never globbed
 
-dir=.stale-deploy-check
+dir="$PWD/.stale-deploy-check"
 mkdir -p "$dir"
 rm -f "$dir/previous.json" "$dir/report.txt"
 
@@ -27,17 +27,23 @@ for id in $INPUT_IGNORE; do args+=(--ignore "$id"); done
 
 if [[ -n "$INPUT_COMMAND" ]]; then
   read -ra cli <<< "$INPUT_COMMAND"
+  cli_dir=$PWD
 else
   cli=(npx -y "stale-deploy-check@$INPUT_VERSION")
+  # Outside the workspace: there, npx would run a stale-deploy-check the project has installed
+  # instead of the version this action pins.
+  cli_dir=${RUNNER_TEMP:-${TMPDIR:-/tmp}}
 fi
 
-"${cli[@]}" "${args[@]}" 2>&1 | tee "$dir/report.txt"
+echo "Running stale-deploy-check $(cd "$cli_dir" && "${cli[@]}" --version 2>&1)"
+(cd "$cli_dir" && "${cli[@]}" "${args[@]}") 2>&1 | tee "$dir/report.txt"
 code=${PIPESTATUS[0]}
 
 {
   echo "exit-code=$code"
   echo "compared=$compared"
-  [[ -f "$dir/report.json" ]] && echo "report=$dir/report.json"
+  # Relative, like the cache step's path in action.yml.
+  [[ -f "$dir/report.json" ]] && echo "report=.stale-deploy-check/report.json"
 } >> "${GITHUB_OUTPUT:-/dev/null}"
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
