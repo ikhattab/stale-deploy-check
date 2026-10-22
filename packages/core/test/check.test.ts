@@ -127,10 +127,21 @@ describe("check()", () => {
     assert.equal(severities(report)["assets.short-cache"], "pass");
   });
 
+  test("checks a HEAD error again with GET before reporting a file as missing", async () => {
+    const report = await check(server.url("/head404/"));
+    const asset = report.requests.filter((r) => r.url.endsWith("app.9c8b7a.js"));
+    assert.deepEqual(asset.map((r) => [r.method, r.status]), [["HEAD", 404], ["GET", 200]]);
+    assert.equal(find(report, "assets.unreachable"), undefined);
+    const baseline = await check(server.url("/good/"), { baseline: { assets: [server.url("/head404/app.9c8b7a.js")] } });
+    assert.equal(find(baseline, "assets.previous-removed"), undefined);
+    assert.equal(find(baseline, "assets.previous-kept")?.severity, "pass");
+  });
+
   test("baseline: old assets that are gone fail, ones that still load pass", async () => {
     const gone = await check(server.url("/good/"), { baseline: { assets: [server.url("/good/assets/old.111aaa.js"), server.url("/good/assets/app.3f9a1c.js")] } });
     const removed = find(gone, "assets.previous-removed");
     assert.equal(removed?.severity, "fail");
+    assert.equal(removed?.title, "1 file from the previous deploy no longer loads");
     assert.deepEqual(removed?.evidence, [{ kind: "status", url: server.url("/good/assets/old.111aaa.js"), status: 404 }]);
 
     const kept = await check(server.url("/good/"), { baseline: { assets: [server.url("/good/assets/kept.222bbb.js")] } });
