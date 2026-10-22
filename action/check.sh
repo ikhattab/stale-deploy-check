@@ -31,8 +31,10 @@ if [[ -n "$INPUT_COMMAND" ]]; then
 else
   cli=(npx -y "stale-deploy-check@$INPUT_VERSION")
   # Outside the workspace: there, npx would run a stale-deploy-check the project has installed
-  # instead of the version this action pins.
-  cli_dir=${RUNNER_TEMP:-${TMPDIR:-/tmp}}
+  # instead of the version this action pins. A fresh directory of our own, so nothing another
+  # user left in a shared temp directory gets run either.
+  cli_dir=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/stale-deploy-check.XXXXXX")
+  trap 'rm -rf "$cli_dir"' EXIT
 fi
 
 echo "Running stale-deploy-check $(cd "$cli_dir" && "${cli[@]}" --version 2>&1)"
