@@ -44,7 +44,11 @@ jobs:
           url: ${{ env.BASE }}/good/
           command: ${{ env.CLI }}
 
-      - name: The same site again, compared with the first report
+      # So the next step can only get the first report back from the cache.
+      - name: Clear the workspace copy of the reports
+        run: rm -rf .stale-deploy-check
+
+      - name: The same site again, compared with the first report from the cache
         id: again
         uses: ./
         with:
@@ -78,15 +82,16 @@ jobs:
         env:
           GOOD: ${{ steps.good.outcome }} ${{ steps.good.outputs.exit-code }} ${{ steps.good.outputs.compared }}
           AGAIN: ${{ steps.again.outcome }} ${{ steps.again.outputs.exit-code }} ${{ steps.again.outputs.compared }}
-          BAD: ${{ steps.bad.outcome }} ${{ steps.bad.outputs.exit-code }}
-          DOWN: ${{ steps.down.outcome }} ${{ steps.down.outputs.exit-code }} ${{ steps.down.outputs.report }}
+          BAD: ${{ steps.bad.outcome }} ${{ steps.bad.outputs.exit-code }} ${{ steps.bad.outputs.compared }}
+          DOWN: ${{ steps.down.outcome }} ${{ steps.down.outputs.exit-code }} ${{ steps.down.outputs.compared }} ${{ steps.down.outputs.report }}
           NPM: ${{ steps.npm.outcome }} ${{ steps.npm.outputs.exit-code }} ${{ steps.npm.outputs.compared }}
         run: |
           check() { if [ "$2" = "$3" ]; then echo "ok   $1: $2"; else echo "FAIL $1: got '$2', expected '$3'"; failed=1; fi; }
           failed=0
           check good "$GOOD" "success 0 false"
           check again "$AGAIN" "success 0 true"
-          check bad "$BAD" "failure 1"
-          check down "$DOWN" "failure 2 "
+          # Different URLs from the passing site, so nothing to compare with.
+          check bad "$BAD" "failure 1 false"
+          check down "$DOWN" "failure 2 false "
           check npm "$NPM" "success 0 false"
           exit $failed

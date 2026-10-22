@@ -42,20 +42,23 @@ outputs:
 runs:
   using: composite
   steps:
-    # One cache entry per run, found again through the prefix, which is per URL.
+    # Everything is per URL, so two sites checked in one job never compare with each other.
+    # One cache entry per run, found again through the prefix.
     - id: key
       shell: bash
       env:
         URL: ${{ inputs.url }}
         RUN: ${{ github.run_id }}-${{ github.run_attempt }}
       run: |
-        echo "prefix=stale-deploy-check-$(printf %s "$URL" | sha256sum | cut -c1-16)-" >> "$GITHUB_OUTPUT"
+        hash=$(printf %s "$URL" | sha256sum | cut -c1-16)
+        echo "dir=.stale-deploy-check/$hash" >> "$GITHUB_OUTPUT"
+        echo "prefix=stale-deploy-check-$hash-" >> "$GITHUB_OUTPUT"
         echo "suffix=$RUN-$(date +%s%N)" >> "$GITHUB_OUTPUT"
 
     - if: inputs.baseline == 'true'
       uses: actions/cache/restore@v4
       with:
-        path: .stale-deploy-check/report.json
+        path: ${{ steps.key.outputs.dir }}/report.json
         key: ${{ steps.key.outputs.prefix }}${{ steps.key.outputs.suffix }}
         restore-keys: ${{ steps.key.outputs.prefix }}
 
@@ -69,13 +72,14 @@ runs:
         INPUT_BASELINE: ${{ inputs.baseline }}
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_COMMAND: ${{ inputs.command }}
+        REPORT_DIR: ${{ steps.key.outputs.dir }}
       run: bash "$GITHUB_ACTION_PATH/action/check.sh"
 
     # Saved even when the check fails, so the next run still has this deploy to compare with.
     - if: always() && inputs.baseline == 'true' && steps.check.outputs.report != ''
       uses: actions/cache/save@v4
       with:
-        path: .stale-deploy-check/report.json
+        path: ${{ steps.key.outputs.dir }}/report.json
         key: ${{ steps.key.outputs.prefix }}${{ steps.key.outputs.suffix }}
 
     - if: steps.check.outputs.exit-code != '0'

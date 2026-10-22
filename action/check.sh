@@ -5,7 +5,9 @@
 set -uo pipefail
 set -f # check ids and origins are split on whitespace, never globbed
 
-dir="$PWD/.stale-deploy-check"
+# Per URL (action.yml sets it), so one site's report is never another's baseline.
+report_dir=${REPORT_DIR:-.stale-deploy-check}
+dir="$PWD/$report_dir"
 mkdir -p "$dir"
 rm -f "$dir/previous.json" "$dir/report.txt"
 
@@ -45,7 +47,7 @@ code=${PIPESTATUS[0]}
   echo "exit-code=$code"
   echo "compared=$compared"
   # Relative, like the cache step's path in action.yml.
-  [[ -f "$dir/report.json" ]] && echo "report=.stale-deploy-check/report.json"
+  [[ -f "$dir/report.json" ]] && echo "report=$report_dir/report.json"
 } >> "${GITHUB_OUTPUT:-/dev/null}"
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
