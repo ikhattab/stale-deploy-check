@@ -60,6 +60,20 @@ const routes: Record<string, Route> = {
     headers: { "content-type": "text/html", "cache-control": "public, max-age=0, must-revalidate", "cf-ray": "8d1f-ZRH", "cf-cache-status": "HIT", server: "cloudflare" },
     body: html(""),
   }),
+  // Cloudflare passing requests through (DYNAMIC) to a platform cache that clears on deploy, like tailwindcss.com and docusaurus.io.
+  "/cf-over-vercel/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "public, max-age=0, must-revalidate", "cf-ray": "a4e8-MRS", "cf-cache-status": "DYNAMIC", server: "cloudflare", age: "9", "x-vercel-id": "cdg1::sfo1::nz8kz", "x-vercel-cache": "HIT" },
+    body: html(""),
+  }),
+  "/cf-over-netlify/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "public,max-age=0,must-revalidate", "cf-ray": "a4e8-CDG", "cf-cache-status": "DYNAMIC", server: "cloudflare", age: "970", "x-nf-request-id": "01M5", "cache-status": '"Netlify Edge"; hit; ttl=31535030' },
+    body: html(""),
+  }),
+  // Fastly caching HTML on Surrogate-Control, which it strips, like python.org.
+  "/fastly/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "max-age=0, must-revalidate", "x-served-by": "cache-mrs1530041-MRS", "x-cache": "HIT, HIT", age: "300" },
+    body: html(""),
+  }),
   // Long CDN lifetime on CloudFront, using a header CloudFront doesn't document.
   "/cloudfront/": () => ({
     headers: { "content-type": "text/html", "cache-control": "max-age=0, s-maxage=3600", "cdn-cache-control": "max-age=3600", "x-amz-cf-id": "abc", "x-amz-cf-pop": "FRA56-P1" },

@@ -57,6 +57,18 @@ export function edgeCacheState(record: RequestRecord): EdgeCacheState {
   return { hit, ...(age !== undefined ? { age } : {}), evidence };
 }
 
+/**
+ * Which cache answered, when its status header says so. With one CDN in front of another, the inner
+ * one can answer while the outer one only passes the request through (Cloudflare's DYNAMIC in front of Vercel).
+ */
+export function cacheThatHit(record: RequestRecord): CdnName | undefined {
+  const h = record.headers;
+  if (h["cf-cache-status"] !== undefined && statusIsHit("cf-cache-status", h["cf-cache-status"])) return "Cloudflare";
+  if (h["x-vercel-cache"] !== undefined && statusIsHit("x-vercel-cache", h["x-vercel-cache"])) return "Vercel";
+  if (/"?Netlify[^;,]*"?;\s*hit\b/i.test(h["cache-status"] ?? "")) return "Netlify";
+  return undefined;
+}
+
 function statusIsHit(name: (typeof STATUS_HEADERS)[number], value: string): boolean {
   const v = value.trim().toUpperCase();
   switch (name) {

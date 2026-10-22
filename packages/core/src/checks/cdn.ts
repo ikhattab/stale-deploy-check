@@ -1,5 +1,5 @@
 import { browserFreshness, parseCacheControl } from "../cache-control.ts";
-import { detectCdn, edgeCacheState, IGNORES_CDN_CACHE_CONTROL, sharedLifetime, type CdnName } from "../cdn.ts";
+import { cacheThatHit, detectCdn, edgeCacheState, IGNORES_CDN_CACHE_CONTROL, sharedLifetime, type CdnName } from "../cdn.ts";
 import { formatDuration } from "../duration.ts";
 import { learn } from "../links.ts";
 import type { Evidence, Finding } from "../types.ts";
@@ -41,13 +41,16 @@ export function cdnChecks(ctx: Context): Finding[] {
       ...hitOn.state.evidence.map((e) => ({ kind: "header", url: hitOn.record.url, name: e.name, value: e.value }) satisfies Evidence),
       header(doc, "cache-control"),
     ];
-    const deployScoped = deployScopedCache(cdn?.name, age);
+    // Behind another CDN, the cache that answered may not be the one in front.
+    const cache = cacheThatHit(hitOn.record) ?? cdn?.name;
+    const servedBy = cache && cache !== cdn?.name ? `${cache}, behind ${at},` : at;
+    const deployScoped = deployScopedCache(cache, age);
     if (explained || deployScoped) {
       findings.push({
         ...base,
         check: "cdn.html-from-edge",
         severity: "info",
-        title: `${at} served the HTML from its cache`,
+        title: `${servedBy} served the HTML from its cache`,
         detail: `${explained ? "The headers allow it, so this is expected." : deployScoped}${ageText}${oneEdge}`,
         evidence,
       });
@@ -56,12 +59,18 @@ export function cdnChecks(ctx: Context): Finding[] {
         ...base,
         check: "cdn.edge-rule-suspected",
         severity: "warn",
-        title: `${at} served the HTML from its cache, but the headers don't ask it to`,
+        title: `${servedBy} served the HTML from its cache, but the headers don't ask it to`,
         detail:
           `The HTML's headers only allow browsers to keep it, yet a shared cache answered.${ageText} ` +
-          `Something in the CDN's own settings (a cache-everything rule, an HTML TTL) is probably overriding the headers, and users get this copy until it expires at the edge or is purged.${oneEdge}`,
+          (cache === "Fastly"
+            ? "Fastly takes its cache lifetime from Surrogate-Control, which it removes before responding, or from the service's own settings, so the lifetime isn't visible here. "
+            : "Something in the CDN's own settings (a cache-everything rule, an HTML TTL) is probably overriding the headers. ") +
+          `Users get this copy until it expires at the edge or is purged.${oneEdge}`,
         evidence,
-        fix: "Find the rule in the CDN's settings that caches HTML and remove it, or purge HTML from the CDN as part of every deploy.",
+        fix:
+          cache === "Fastly"
+            ? "Purge HTML from Fastly as part of every deploy, or shorten the Surrogate-Control lifetime on HTML."
+            : "Find the rule in the CDN's settings that caches HTML and remove it, or purge HTML from the CDN as part of every deploy.",
       });
     }
   }

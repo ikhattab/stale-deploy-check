@@ -68,6 +68,8 @@ Platforms that clear their edge cache on deploy don't get `cdn.edge-rule-suspect
 - **Vercel and Netlify** clear their CDN cache on every deploy.
 - **Cloudflare with a hit but no `Age`**: that's what a Worker's own cache sends (seen on Workers static assets). Cloudflare's docs say [a Worker's cache is keyed by its version](https://developers.cloudflare.com/workers/cache/debugging/) unless `cache.cross_version_cache` is on. Cloudflare's zone cache sends `Age`, so a hit with `Age` still warns.
 
+With one CDN in front of another, the hit is credited to the cache whose status header reports it: `x-vercel-cache: HIT` or `cache-status: "Netlify Edge"; hit` behind Cloudflare's `cf-cache-status: DYNAMIC` is Vercel's or Netlify's cache, which clears on deploy.
+
 Every CDN finding says which edge answered (from `cf-ray`, `x-served-by`, etc. when present) and that other edges can hold different copies.
 
 ### Open tab

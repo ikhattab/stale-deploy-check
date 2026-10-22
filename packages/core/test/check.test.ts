@@ -71,6 +71,25 @@ describe("check()", () => {
     assert.equal(find(report, "cdn.html-from-edge")?.severity, "info");
   });
 
+  test("a platform cache behind Cloudflare gets the credit for the hit, and clears on deploy", async () => {
+    for (const [path, name] of [["/cf-over-vercel/", "Vercel"], ["/cf-over-netlify/", "Netlify"]] as const) {
+      const report = await check(server.url(path));
+      assert.equal(find(report, "cdn.edge-rule-suspected"), undefined, path);
+      const hit = find(report, "cdn.html-from-edge")!;
+      assert.equal(hit.severity, "info");
+      assert.match(hit.title, new RegExp(`^${name}, behind Cloudflare \\(edge \\w+\\), served the HTML from its cache$`));
+      assert.match(hit.detail, new RegExp(`${name} clears its CDN cache on every deploy`));
+    }
+  });
+
+  test("a Fastly hit explains Surrogate-Control instead of blaming a rule", async () => {
+    const finding = find(await check(server.url("/fastly/")), "cdn.edge-rule-suspected")!;
+    assert.equal(finding.severity, "warn");
+    assert.match(finding.detail, /Surrogate-Control/);
+    assert.doesNotMatch(finding.detail, /cache-everything/);
+    assert.match(finding.fix!, /Purge HTML from Fastly/);
+  });
+
   test("CloudFront with a long CDN lifetime set through CDN-Cache-Control", async () => {
     const s = severities(await check(server.url("/cloudfront/")));
     assert.equal(s["cdn.html-edge-lifetime"], "warn");
