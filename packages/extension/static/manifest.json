@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "stale-deploy-check",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Is this tab on the old version after a deploy, and why? Checks its build, its HTML, its service worker and its files.",
   "homepage_url": "https://github.com/ikhattab/stale-deploy-check",
   "minimum_chrome_version": "116",
