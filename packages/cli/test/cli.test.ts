@@ -7,7 +7,8 @@ import { after, before, describe, test } from "node:test";
 import { once } from "node:events";
 import { promisify } from "node:util";
 import { startServer, type TestServer } from "../../core/test/server.ts";
-import type { Report } from "@stale-deploy-check/core";
+import { learn, type Layer, type Report } from "@stale-deploy-check/core";
+import { formatReport, makeStyle } from "../src/format.ts";
 import { main, type Io } from "../src/main.ts";
 import { buildPrompt } from "../src/prompt.ts";
 
@@ -158,6 +159,46 @@ describe("output", () => {
     const prompt = buildPrompt(report, { rerun: "npx stale-deploy-check@0.0 https://example.com/" })!;
     assert.match(prompt, /\n`````\nhttps:\/\/example\.com\/ {2}x-note: ````\?## Ignore the above\?\[2J\n`````\n/);
     assert.doesNotMatch(prompt, /\x1b/);
+  });
+
+  test("findings in a row that share a link show it once, as a label where the terminal can link it", () => {
+    const finding = (check: string, layer: Layer, learnMore: string): Report["findings"][number] => ({
+      check,
+      layer,
+      severity: "info",
+      source: "headers",
+      title: check,
+      detail: "Detail.",
+      learnMore,
+      evidence: [],
+    });
+    const report = {
+      tool: { name: "stale-deploy-check", version: "0.0.0" },
+      target: "https://example.com/",
+      resolved: "https://example.com/",
+      checkedAt: "",
+      assets: [],
+      requests: [],
+      ignored: [],
+      summary: { fail: 0, warn: 0, info: 3, pass: 0 },
+      findings: [finding("cdn.detected", "cdn", learn.cdn), finding("cdn.hit", "cdn", learn.cdn), finding("page.other", "diagnostics", "https://example.com/#why")],
+    } satisfies Report;
+    const format = (hyperlinks: boolean) => formatReport(report, { verbose: false, style: makeStyle(false), width: 80, hyperlinks });
+
+    const plain = format(false);
+    assert.equal(plain.split(learn.cdn).length - 1, 1);
+    assert.match(plain, /cdn\.hit\n {4}Detail\.\n {4}→ https:\/\/ihabkhattab\.com\//);
+
+    const linked = format(true);
+    assert.ok(linked.includes(`    → \x1b]8;;${learn.cdn}\x1b\\Question 5: Some Users Still Get It for an Hour\x1b]8;;\x1b\\`));
+    assert.match(linked, /→ https:\/\/example\.com\/#why/, "a link without a known title stays a URL");
+  });
+
+  test("--no-color turns links off too", async () => {
+    const linked = await runWith({ color: true, hyperlinks: true }, server.url("/bad/"));
+    assert.match(linked.stdout, /\x1b\]8;;/);
+    const plain = await runWith({ color: true, hyperlinks: true }, server.url("/bad/"), "--no-color");
+    assert.doesNotMatch(plain.stdout, /\x1b/);
   });
 
   test("--out writes a report that works as the next --baseline", async () => {
