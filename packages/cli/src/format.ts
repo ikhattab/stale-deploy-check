@@ -1,4 +1,4 @@
-import { clean, type Finding, type Layer, type Report, type Severity } from "@stale-deploy-check/core";
+import { clean, learnTitles, type Finding, type Layer, type Report, type Severity } from "@stale-deploy-check/core";
 
 const LAYERS: { layer: Layer; heading: string }[] = [
   { layer: "service-worker", heading: "Service worker" },
@@ -51,6 +51,8 @@ export interface FormatOptions {
   verbose: boolean;
   style: Style;
   width: number;
+  /** The terminal understands OSC 8 links: show the article's heading and keep the long URL behind it. */
+  hyperlinks?: boolean;
   /** For someone at a terminal: commands worth running next. Left out for pipes, CI and agents. */
   hints?: { prompt: string };
 }
@@ -88,7 +90,11 @@ export function formatReport(unsafe: Report, options: FormatOptions): string {
       .sort((a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
     if (findings.length === 0) continue;
     lines.push("", sectionHeading(heading, findings, style, width));
-    for (const f of findings) lines.push(...formatFinding(f, marks[f.severity], { style, verbose, width }));
+    findings.forEach((f, i) => {
+      // Findings in a row that share a link get it once, after the last of them.
+      const link = findings[i + 1]?.learnMore === f.learnMore ? undefined : f.learnMore;
+      lines.push(...formatFinding(f, marks[f.severity], { style, verbose, width, link, hyperlinks: options.hyperlinks ?? false }));
+    });
   }
 
   if (report.ignored.length) lines.push("", style.dim(`Ignored: ${report.ignored.join(", ")}`));
@@ -122,8 +128,12 @@ function sectionHeading(heading: string, findings: Finding[], style: Style, widt
   return `${style.bold(heading)} ${style.dim(rule)}${plain ? ` ${counts.join(style.dim(" · "))}` : ""}`;
 }
 
-function formatFinding(f: Finding, mark: string, options: { style: Style; verbose: boolean; width: number }): string[] {
-  const { style, verbose, width } = options;
+function formatFinding(
+  f: Finding,
+  mark: string,
+  options: { style: Style; verbose: boolean; width: number; link: string | undefined; hyperlinks: boolean },
+): string[] {
+  const { style, verbose, width, link } = options;
   const indent = "    ";
   const title = f.severity === "fail" || f.severity === "warn" ? style.bold(f.title) : f.title;
   const lines = [`  ${mark} ${title}`];
@@ -147,8 +157,14 @@ function formatFinding(f: Finding, mark: string, options: { style: Style; verbos
       lines.push(style.dim(`${indent}  ${text}`));
     }
   }
-  lines.push(style.dim(`${indent}→ ${f.learnMore}`));
+  if (link) lines.push(style.dim(`${indent}→ ${formatLink(link, options.hyperlinks)}`));
   return lines;
+}
+
+/** The URLs run past most terminal widths, so a terminal that can hide one behind a label gets the label. */
+function formatLink(url: string, hyperlinks: boolean): string {
+  const title = learnTitles[url];
+  return hyperlinks && title ? `\x1b]8;;${url}\x1b\\${title}\x1b]8;;\x1b\\` : url;
 }
 
 function shortUrl(url: string): string {

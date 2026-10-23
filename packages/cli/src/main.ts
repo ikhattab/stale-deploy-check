@@ -42,6 +42,8 @@ export interface Io {
   progress?: boolean;
   /** stdout is a terminal with a person at it: end the report with what to run next. */
   interactive?: boolean;
+  /** stdout is a terminal that renders OSC 8 links. */
+  hyperlinks?: boolean;
   /** The command that puts stdin on the clipboard, like pbcopy. */
   clipboard?: string | undefined;
   fetch?: CheckOptions["fetch"];
@@ -151,7 +153,9 @@ export async function main(argv: string[], io: Io): Promise<number> {
   } else {
     const style = makeStyle(color);
     const hints = io.interactive ? { prompt: `${command("--prompt")}${io.clipboard ? ` | ${io.clipboard}` : ""}` } : undefined;
-    io.stdout(`${formatReport(report, { verbose: values.verbose, style, width: io.width, ...(hints ? { hints } : {}) })}\n`);
+    // --no-color promises plain output, so it turns links off too.
+    const hyperlinks = color && Boolean(io.hyperlinks);
+    io.stdout(`${formatReport(report, { verbose: values.verbose, style, width: io.width, hyperlinks, ...(hints ? { hints } : {}) })}\n`);
   }
 
   const failing = report.summary.fail + (values.strict ? report.summary.warn : 0);

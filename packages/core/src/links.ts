@@ -9,3 +9,14 @@ export const learn = {
   serviceWorker: `${ARTICLE}#question-7-now-add-a-service-worker`,
   proveIt: `${ARTICLE}#question-8-prove-it`,
 } as const;
+
+/** The article's heading for each link, for places that can show a label and keep the URL behind it. */
+export const learnTitles: Record<string, string> = {
+  [learn.heuristic]: "Question 2: No Cache Header Means No Caching, Right?",
+  [learn.headers]: "Question 3: Then Turn Caching Off",
+  [learn.hashing]: "Question 4: Why Put a Hash in the Name?",
+  [learn.cdn]: "Question 5: Some Users Still Get It for an Hour",
+  [learn.openTab]: "Question 6: A Blank Screen With No Cache Involved",
+  [learn.serviceWorker]: "Question 7: Now Add a Service Worker",
+  [learn.proveIt]: "Question 8: Prove It",
+};
