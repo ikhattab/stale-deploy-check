@@ -48,7 +48,7 @@ Point it at production or a preview deploy on your real host, not a local dev se
 To have a coding agent fix what it found, ask for a prompt instead of the report and paste it into the agent, in the site's repo:
 
 ```sh
-npx stale-deploy-check https://example.com/ --prompt | pbcopy
+npx -y stale-deploy-check https://example.com/ --prompt | pbcopy
 ```
 
 The prompt lists each failure and warning with its evidence and suggested fix, says where headers usually come from in a repo, and ends with the command that checks the fix. Run at a terminal, the report ends with this command whenever there's something to fix. The prompt quotes headers and URLs from the site, and tells the agent to treat them as data. To also review the service worker and deploy code, use the [agent skill](#agent-skill) instead.
