@@ -1,6 +1,6 @@
 {
   "name": "@stale-deploy-check/probe",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Runs inside a browser tab and checks whether that tab is on the old version, and why: build id, where its HTML came from, its service worker, and whether the files it loaded are still there.",
   "type": "module",
   "exports": {
@@ -14,7 +14,7 @@
     "dist"
   ],
   "dependencies": {
-    "@stale-deploy-check/core": "0.5.2"
+    "@stale-deploy-check/core": "0.5.3"
   },
   "license": "MIT",
   "private": true

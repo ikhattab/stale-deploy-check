@@ -1,10 +1,10 @@
 {
   "name": "@stale-deploy-check/extension",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A browser extension that checks whether the current tab is on the old version after a deploy, and why.",
   "type": "module",
   "dependencies": {
-    "@stale-deploy-check/probe": "0.5.2"
+    "@stale-deploy-check/probe": "0.5.3"
   },
   "license": "MIT",
   "private": true,
