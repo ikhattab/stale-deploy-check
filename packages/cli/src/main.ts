@@ -140,19 +140,20 @@ export async function main(argv: string[], io: Io): Promise<number> {
     ...(values["html-max-age"] ? ["--html-max-age", values["html-max-age"]] : []),
     ...(values["edge-max-age"] ? ["--edge-max-age", values["edge-max-age"]] : []),
   ];
-  const command = (...extra: string[]) =>
-    ["npx", `stale-deploy-check@${VERSION.split(".").slice(0, 2).join(".")}`, ...[...rerunArgs, ...extra].map((a) => shellQuote(clean(a)))].join(" ");
+  const command = (npxFlags: string[], ...extra: string[]) =>
+    ["npx", ...npxFlags, `stale-deploy-check@${VERSION.split(".").slice(0, 2).join(".")}`, ...[...rerunArgs, ...extra].map((a) => shellQuote(clean(a)))].join(" ");
 
   if (values.out) await writeFile(values.out, `${JSON.stringify(report, null, 2)}\n`);
   if (values.json) {
     io.stdout(`${JSON.stringify(report, null, 2)}\n`);
   } else if (values.prompt) {
-    const prompt = buildPrompt(report, { rerun: command() });
+    const prompt = buildPrompt(report, { rerun: command([]) });
     if (prompt) io.stdout(prompt);
     else io.stderr(`Nothing to fix: no failures or warnings on ${clean(report.resolved)}.\n`);
   } else {
     const style = makeStyle(color);
-    const hints = io.interactive ? { prompt: `${command("--prompt")}${io.clipboard ? ` | ${io.clipboard}` : ""}` } : undefined;
+    // Piped, npx's "Ok to proceed?" for a first download would go into the clipboard unseen, and wait for an answer.
+    const hints = io.interactive ? { prompt: io.clipboard ? `${command(["-y"], "--prompt")} | ${io.clipboard}` : command([], "--prompt") } : undefined;
     // --no-color promises plain output, so it turns links off too.
     const hyperlinks = color && Boolean(io.hyperlinks);
     io.stdout(`${formatReport(report, { verbose: values.verbose, style, width: io.width, hyperlinks, ...(hints ? { hints } : {}) })}\n`);

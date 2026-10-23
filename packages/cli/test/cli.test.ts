@@ -75,7 +75,10 @@ describe("output", () => {
 
   test("at a terminal, it ends with how to hand the fixes to an AI agent", async () => {
     const { stdout } = await runWith({ interactive: true, clipboard: "pbcopy" }, server.url("/bad/"), "--ignore", "html.no-validator");
-    assert.match(stdout, /\nNext\n {2}Have your AI coding agent fix these\. .*\n {4}npx stale-deploy-check@\d+\.\d+ http:\/\/127\.0\.0\.1:\d+\/bad\/ --ignore html\.no-validator --prompt \| pbcopy\n/);
+    assert.match(stdout, /\nNext\n {2}Have your AI coding agent fix these\. .*\n {4}npx -y stale-deploy-check@\d+\.\d+ http:\/\/127\.0\.0\.1:\d+\/bad\/ --ignore html\.no-validator --prompt \| pbcopy\n/);
+    // Without a clipboard to pipe into, npx can ask before downloading, where the person sees it.
+    const unpiped = await runWith({ interactive: true }, server.url("/bad/"));
+    assert.match(unpiped.stdout, /\n {4}npx stale-deploy-check@\d+\.\d+ http:\/\/127\.0\.0\.1:\d+\/bad\/ --prompt\n/);
     assert.match(stdout, /Add --verbose/);
 
     const clean = await runWith({ interactive: true, clipboard: "pbcopy" }, server.url("/good/"));
