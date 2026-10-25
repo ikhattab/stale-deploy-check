@@ -1,5 +1,7 @@
 # Chrome Web Store listing
 
+Published at https://chromewebstore.google.com/detail/stale-deploy-check/bcibhjoeiphifeicebippfihloijnanm.
+
 Everything the developer dashboard asks for, ready to paste. Upload `packages/extension/dist/stale-deploy-check-extension-<version>.zip` from `npm run package:extension`.
 
 ## Store listing

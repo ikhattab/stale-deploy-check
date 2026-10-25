@@ -108,7 +108,7 @@ The skill doesn't edit code unless asked. Each finding's `fix` is written for th
 
 ## Browser probe checks
 
-The probe (`packages/probe`) runs inside a tab, as a console snippet today. It first reads the tab without making requests: its `<meta>` build id, Navigation Timing for the document, the scripts and stylesheets in Resource Timing and the DOM, the service worker registration, and copies of the page in Cache Storage. Then it makes requests from the page with `cache: "no-store"`:
+The probe (`packages/probe`) runs inside a tab, from the [browser extension](https://chromewebstore.google.com/detail/stale-deploy-check/bcibhjoeiphifeicebippfihloijnanm) or as a console snippet. It first reads the tab without making requests: its `<meta>` build id, Navigation Timing for the document, the scripts and stylesheets in Resource Timing and the DOM, the service worker registration, and copies of the page in Cache Storage. Then it makes requests from the page with `cache: "no-store"`:
 
 1. `GET` the tab's URL, to compare with the live page.
 2. `HEAD` each script and stylesheet this tab loaded, on the site's own origins, that the live page doesn't reference (up to 50). Any error status is checked again with `GET`, since some servers answer `HEAD` with a 404 for a file `GET` serves (Cloudflare Zaraz).
@@ -134,4 +134,4 @@ Requests go through the tab's service worker, if it has one. Response headers on
 - Thresholds: 300 s for HTML `max-age` (`--html-max-age`) and for the CDN lifetime (`--edge-max-age`), 30 days for hashed assets.
 - `html.heuristic-freshness` is a `fail`, and it checks only the URL given.
 - `--baseline` is in v1. `--out report.json` saves the report a later run compares against.
-- The browser console snippet is its own package, `packages/probe`, so a browser extension can reuse it.
+- The browser console snippet is its own package, `packages/probe`, so the browser extension can reuse it.

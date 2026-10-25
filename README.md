@@ -12,14 +12,14 @@ It's built on the article [We Deployed an Hour Ago. Why Do Users Still See the O
 
 ## Where an old version hides
 
-After a deploy, an old copy of your app can live in four places. Two of them can be seen from outside with plain HTTP requests, and two can only be judged by reading your code. That's why there are two parts: a **CLI** for what HTTP shows, and an **agent skill** that runs the CLI and then reads your repo for the rest.
+After a deploy, an old copy of your app can live in four places. Two of them can be seen from outside with plain HTTP requests, and two can only be judged by reading your code. That's why there are two parts: a **CLI** for what HTTP shows, and an **agent skill** that runs the CLI and then reads your repo for the rest. A **browser extension** shows the other two for one tab: the one you have open.
 
-| Where | What goes wrong | CLI | Agent skill |
-| --- | --- | --- | --- |
-| Browser HTTP cache | HTML reused without asking; unhashed scripts cached for days; a missing file's 404 kept for a year | ✓ live headers | ✓ the host config that sets them |
-| CDN | The edge keeps old HTML until it expires or is purged | ✓ cache status, edge lifetime | ✓ purge step in the deploy |
-| Open tabs | Old code requests chunks the deploy deleted: blank screen | ✓ with `--baseline` | ✓ deploy deletes, no reload on chunk errors |
-| Service worker | A new worker waits until every tab closes | detects one | ✓ the update flow |
+| Where | What goes wrong | CLI | Agent skill | Extension |
+| --- | --- | --- | --- | --- |
+| Browser HTTP cache | HTML reused without asking; unhashed scripts cached for days; a missing file's 404 kept for a year | ✓ live headers | ✓ the host config that sets them | ✓ where this tab's HTML came from |
+| CDN | The edge keeps old HTML until it expires or is purged | ✓ cache status, edge lifetime | ✓ purge step in the deploy | |
+| Open tabs | Old code requests chunks the deploy deleted: blank screen | ✓ with `--baseline` | ✓ deploy deletes, no reload on chunk errors | ✓ this tab's build and files |
+| Service worker | A new worker waits until every tab closes | detects one | ✓ the update flow | ✓ this tab's worker and its cache |
 
 ## CLI
 
@@ -116,7 +116,7 @@ Keep `report.json` somewhere that outlives the job (a cache, an artifact, a buck
 
 ### What it can't see
 
-Only what any HTTP client can see from one place: the HTML's headers, the names and headers of its scripts and stylesheets, and the CDN edge that answered. It can't see what's already in users' browser caches, what their open tabs are running, or what their service workers serve. Other CDN edges can hold different copies than the one that answered. The agent skill covers the code that controls the rest.
+Only what any HTTP client can see from one place: the HTML's headers, the names and headers of its scripts and stylesheets, and the CDN edge that answered. It can't see what's already in users' browser caches, what their open tabs are running, or what their service workers serve. Other CDN edges can hold different copies than the one that answered. The agent skill covers the code that controls the rest, and the [browser extension](#browser-extension) shows it for a tab you have open.
 
 ## Agent skill
 
@@ -155,6 +155,17 @@ What it checks in the repo:
 
 What it won't do: edit your code unless you ask, install packages or build in your repo (tests run in a scratch copy), or download the CLI with `npx` without asking first.
 
+## Browser extension
+
+Install [stale-deploy-check from the Chrome Web Store](https://chromewebstore.google.com/detail/stale-deploy-check/bcibhjoeiphifeicebippfihloijnanm). When a tab still shows the old version after a deploy, click its toolbar button on that tab to find out why. It looks at the tab from inside the browser:
+
+- **Its build**: the tab's build id (or, without one, the files it loaded) against what the server sends now.
+- **Where its HTML came from**: the network, the browser cache, a 304, or a service worker.
+- **The service worker**: whether one controls the tab, whether a new one is waiting to take over, and whether its cache holds an old copy of the page.
+- **The files the tab loaded**: whether the deploy deleted them, which leaves the tab one click away from a blank screen.
+
+Each problem names the layer that kept the old version, with the evidence, a fix, and a link to the article section. **Copy prompt to fix** copies a prompt for your coding agent, like the CLI's `--prompt`. The checks are listed in [docs/checks.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/checks.md#browser-probe-checks).
+
 ## Privacy
 
 None of the tools collect anything or send it anywhere, and none have telemetry. The CLI and the GitHub Action request the URL you give them and its files, as listed above. The browser extension runs only when you click it, and only on that tab: it reads the tab, requests that page and its files from the same site, and shows the result in its popup. The agent skill runs in your coding agent and reads your repo there.
@@ -172,7 +183,7 @@ npm run package:extension   # build, then zip the extension for the Chrome Web S
 packages/core       fetch-only checks that return findings; runs in Node, Workers, and browsers
 packages/cli        the stale-deploy-check command
 packages/probe      runs inside a tab: is it on the old version, and why (built as a console snippet)
-packages/extension  a browser extension that runs the probe on the current tab (load packages/extension/dist/chrome unpacked); store/ has the listing
+packages/extension  a browser extension that runs the probe on the current tab (load packages/extension/dist/chrome unpacked to try a change); store/ has the listing
 skills/             the agent skill
 evals/              the skill's test prompts and two example repos
 calibration/        runs the CLI against 50 real sites and compares versions
@@ -182,7 +193,7 @@ action.yml          the GitHub Action; action/check.sh does the work, and CI run
 - [docs/checks.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/checks.md): every check, what triggers it, and where the article explains it
 - [docs/findings.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/findings.md): the finding and report format
 
-Releases: bump every `package.json` and `packages/extension/static/manifest.json` (a test checks they match), then push a `vX.Y.Z` tag that matches `packages/cli/package.json`. [`release.yml`](https://github.com/ikhattab/stale-deploy-check/blob/main/.github/workflows/release.yml) tests the tag and, once a maintainer approves the `npm` environment, publishes to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers) and provenance. After npm lists the version, move the `v0` tag to it for the action.
+Releases: bump every `package.json` and `packages/extension/static/manifest.json` (a test checks they match), then push a `vX.Y.Z` tag that matches `packages/cli/package.json`. [`release.yml`](https://github.com/ikhattab/stale-deploy-check/blob/main/.github/workflows/release.yml) tests the tag and, once a maintainer approves the `npm` environment, publishes to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers) and provenance. After npm lists the version, move the `v0` tag to it for the action. Then run `npm run package:extension` and upload the zip to the [Chrome Web Store listing](https://chromewebstore.google.com/detail/stale-deploy-check/bcibhjoeiphifeicebippfihloijnanm) from the developer dashboard.
 
 ## License
 

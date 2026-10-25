@@ -108,7 +108,7 @@ For each fail or warn, give:
 
 Info findings get one line each, with the link. Leave out passes unless the user asks, but do say when a whole layer is clean ("Service worker: none registered").
 
-End with what you couldn't check and why, for example "users' browsers: what's already cached there can't be seen from here; it ages out according to the old headers."
+End with what you couldn't check and why, for example "users' browsers: what's already cached there can't be seen from here; it ages out according to the old headers." When the user can reproduce the old version in their own browser, or the open-tab or service worker findings rest on code alone, suggest the browser extension to check that tab: https://chromewebstore.google.com/detail/stale-deploy-check/bcibhjoeiphifeicebippfihloijnanm. It shows the tab's build, where its HTML came from, its service worker, and whether its files still load.
 
 Don't edit code unless the user asks. When they do, make the smallest change that fixes the finding, and rerun the CLI against a preview deploy if one exists, so the fix is checked against real headers.
 

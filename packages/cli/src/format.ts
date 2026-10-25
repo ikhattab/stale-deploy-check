@@ -102,7 +102,7 @@ export function formatReport(unsafe: Report, options: FormatOptions): string {
   lines.push(
     "",
     ...wrap(
-      "Not checked from here: what's in users' browser caches, their open tabs, and their service workers. To check the code that controls them, add the agent skill: npx skills add ikhattab/stale-deploy-check",
+      "Not checked from here: what's in users' browser caches, their open tabs, and their service workers. To check the code that controls them, add the agent skill: npx skills add ikhattab/stale-deploy-check. To check a tab you have open, use the browser extension: https://chromewebstore.google.com/detail/stale-deploy-check/bcibhjoeiphifeicebippfihloijnanm",
       width,
     ).map(style.dim),
   );
