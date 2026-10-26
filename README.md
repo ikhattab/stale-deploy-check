@@ -168,6 +168,7 @@ npm install
 npm run build   # tsc -b, then bundle the CLI, the probe snippet, and the extension
 npm test        # node --test against the TypeScript sources
 npm run package:extension   # build, then zip the extension for the Chrome Web Store
+npm run screenshot:cli      # redraw the README's CLI screenshots in docs/images (needs Chrome)
 ```
 
 ```
