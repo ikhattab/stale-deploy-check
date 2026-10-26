@@ -27,21 +27,10 @@ After a deploy, an old copy of your app can live in four places. Two of them can
 npx stale-deploy-check https://example.com/
 ```
 
-```txt
-https://example.com/  →  1 fail · 1 warn · 3 info
-
-HTTP cache ──────────────────────────────────────────────────── 1 fail · 1 warn
-  ✗ Browsers may reuse the HTML for about 1.6 hours without asking
-    The HTML has no Cache-Control lifetime and no Expires, so browsers guess
-    one: usually 10% of the time since Last-Modified. It was last modified 16.5
-    hours before this response, so a user who loads it now can keep getting this
-    copy for about 1.6 hours after your next deploy.
-    Fix: Send Cache-Control: no-cache on HTML, with an ETag, so browsers keep a
-    copy but ask before every use.
-    → https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/#question-2-no-cache-header-means-no-caching-right
-  ! 1 file without a hash in the name
-  …
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ikhattab/stale-deploy-check/main/docs/images/cli-report-dark.png">
+  <img alt="The CLI's report for a site whose HTML has no Cache-Control: 2 fails and 2 warnings under HTTP cache, each with what goes wrong, a fix, and a link to the article section, ending with the command that copies a prompt for a coding agent" src="https://raw.githubusercontent.com/ikhattab/stale-deploy-check/main/docs/images/cli-report-light.png" width="720">
+</picture>
 
 Point it at production or a preview deploy on your real host, not a local dev server: dev servers don't hash file names and send their own headers, so every finding would be about the dev server.
 
@@ -163,6 +152,8 @@ Install [stale-deploy-check from the Chrome Web Store](https://chromewebstore.go
 - **Where its HTML came from**: the network, the browser cache, a 304, or a service worker.
 - **The service worker**: whether one controls the tab, whether a new one is waiting to take over, and whether its cache holds an old copy of the page.
 - **The files the tab loaded**: whether the deploy deleted them, which leaves the tab one click away from a blank screen.
+
+<img alt="The extension's popup on a tab that loaded build 1 from its service worker after build 2 was deployed: 2 fails, each with the evidence, a fix, and a Copy prompt to fix button" src="https://raw.githubusercontent.com/ikhattab/stale-deploy-check/main/packages/extension/store/screenshot-1-service-worker.png" width="720">
 
 Each problem names the layer that kept the old version, with the evidence, a fix, and a link to the article section. **Copy prompt to fix** copies a prompt for your coding agent, like the CLI's `--prompt`. The checks are listed in [docs/checks.md](https://github.com/ikhattab/stale-deploy-check/blob/main/docs/checks.md#browser-probe-checks).
 
