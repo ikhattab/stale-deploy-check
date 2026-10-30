@@ -442,6 +442,9 @@ function assetChecks(tab: TabSnapshot, own: string[], changed: string[], assets:
   const controlled = tab.serviceWorker !== "unsupported" && !!tab.serviceWorker.controller;
   const status = (r: RequestRecord): Evidence => ({ kind: "status", url: r.url, status: r.status });
   const cacheEvidence = (r: RequestRecord): Evidence[] => edgeCacheState(r).evidence.map((e): Evidence => ({ kind: "header", url: r.url, name: e.name, value: e.value }));
+  // A 200 only reads as gone next to the HTML content type that makes it a fallback.
+  const goneEvidence = (r: RequestRecord): Evidence[] =>
+    fallback(r) ? [status(r), { kind: "header", url: r.url, name: "content-type", value: r.headers["content-type"] ?? null }] : [status(r)];
 
   if (gone.length + cacheOnly.length > 0) {
     const n = gone.length + cacheOnly.length;
@@ -460,8 +463,8 @@ function assetChecks(tab: TabSnapshot, own: string[], changed: string[], assets:
           : "") +
         ([...gone, ...cacheOnly.map((a) => a.pastCache!)].some(fallback) ? " An HTML page came back where a script or stylesheet should be: a fallback rule that serves index.html for missing files." : ""),
       evidence: [
-        ...gone.map(status),
-        ...cacheOnly.flatMap((a) => [status(a.record!), ...cacheEvidence(a.record!), status(a.pastCache!)]),
+        ...gone.flatMap(goneEvidence),
+        ...cacheOnly.flatMap((a) => [status(a.record!), ...cacheEvidence(a.record!), ...goneEvidence(a.pastCache!)]),
         ...(cacheOnly.length > 0 && control ? [status(control)] : []),
       ],
       fix: "Keep old assets for a few days after a deploy instead of deleting them, and reload once when a dynamic import fails.",
