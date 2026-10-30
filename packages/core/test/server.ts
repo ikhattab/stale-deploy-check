@@ -170,6 +170,15 @@ const routes: Record<string, Route> = {
 
   // The same HTML without Cloudflare: a host that could send a validator and doesn't.
   "/no-validator/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html("") }),
+  // Netlify behind a Cloudflare zone, as docusaurus.io answered: Netlify's ETag reaches the files but not the HTML.
+  "/cf-netlify-no-validator/": () => ({
+    headers: { "content-type": "text/html; charset=UTF-8", "cache-control": "public, max-age=0, must-revalidate", "cf-ray": "9a1f-MRS", server: "cloudflare", "cf-cache-status": "DYNAMIC", "x-nf-request-id": "01M6775VH3JMFMY4ZB09NSRHZS", "cache-status": '"Netlify Edge"; hit' },
+    body: html(`<script src="/cf-netlify-no-validator/assets/main.7437c1bb.js"></script>`),
+  }),
+  "/cf-netlify-no-validator/assets/main.7437c1bb.js": () => ({
+    headers: { "content-type": "application/javascript", "cache-control": YEAR, etag: '"7437c1bb1ac6080f1864cc55ea0ee861-ssl-df"', "cf-ray": "9a1f-MRS", server: "cloudflare" },
+    body: "//",
+  }),
 
   "/redirect": () => ({ status: 301, headers: { location: "/good/" } }),
   "/json": () => ({ headers: { "content-type": "application/json" }, body: "{}" }),

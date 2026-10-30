@@ -103,6 +103,13 @@ describe("check()", () => {
     assert.match(pages!.detail, /Pages and Workers static assets/);
   });
 
+  test("HTML without a validator still warns when Cloudflare is in front of another platform", async () => {
+    const finding = find(await check(server.url("/cf-netlify-no-validator/")), "html.no-validator");
+    assert.equal(finding?.severity, "warn");
+    assert.match(finding!.fix!, /whether Netlify sends an ETag/);
+    assert.match(finding!.fix!, /Email Obfuscation/);
+  });
+
   test("a per-request ETag can never revalidate", async () => {
     const finding = find(await check(server.url("/dynamic/")), "html.revalidation");
     assert.equal(finding?.severity, "warn");

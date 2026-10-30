@@ -27,7 +27,7 @@ Nothing else: no crawling, no guessing paths like `/sw.js`.
 | `html.stale-while-revalidate` | warn | HTML with a `max-age` and `stale-while-revalidate`. The first visit after a deploy can get the old page while the new one loads in the background. | Q3 |
 | `html.no-store` | warn | `no-store` on HTML. It works, but every visit downloads the page again and some browsers keep it out of the back/forward cache. | Q3 |
 | `html.no-validator` | warn | `no-cache` (or `max-age=0`) but no `ETag` and no `Last-Modified`, so every revalidation downloads the whole page. | Q3 |
-| `html.no-validator` | info | The same on Cloudflare when the site's scripts and stylesheets do have an `ETag`. Cloudflare Pages and Workers static assets send one with every file except HTML, with no setting to change it. | Q3 |
+| `html.no-validator` | info | The same when Cloudflare serves the HTML itself (no Vercel or Netlify headers behind it) and the site's scripts and stylesheets do have an `ETag`. Cloudflare Pages and Workers static assets send one with every file except HTML, with no setting to change it. With another platform behind Cloudflare it stays a warn, and the fix names the Cloudflare features that drop ETags. | Q3 |
 | `html.revalidation` | warn | The conditional request got a full `200` instead of `304`. | Q3 |
 | `html.revalidation` | pass | It got `304`. | Q3 |
 

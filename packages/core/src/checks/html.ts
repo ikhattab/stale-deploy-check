@@ -1,5 +1,5 @@
 import { browserFreshness, parseCacheControl, seconds } from "../cache-control.ts";
-import { detectCdn } from "../cdn.ts";
+import { detectCdn, platformBehindCloudflare } from "../cdn.ts";
 import { formatDuration } from "../duration.ts";
 import { learn } from "../links.ts";
 import type { Finding } from "../types.ts";
@@ -117,7 +117,11 @@ export function htmlChecks(ctx: Context): Finding[] {
   const hasValidator = doc.headers["etag"] !== undefined || doc.headers["last-modified"] !== undefined;
   // Cloudflare Pages and Workers static assets send an ETag with every file but the HTML, and have
   // no setting for it (seen on sdc-lab-*.pages.dev and ihabkhattab.com). Not something to fix there.
-  const htmlOnlyOnCloudflare = detectCdn(doc)?.name === "Cloudflare" && ctx.assets.some((a) => a.record.headers["etag"] !== undefined);
+  // With another platform behind Cloudflare (docusaurus.io on Netlify, nodejs.org on Vercel), the
+  // platform sends one and a zone setting most likely drops it, which the site owner can change.
+  const onCloudflare = detectCdn(doc)?.name === "Cloudflare";
+  const behind = onCloudflare ? platformBehindCloudflare(doc) : undefined;
+  const htmlOnlyOnCloudflare = onCloudflare && !behind && ctx.assets.some((a) => a.record.headers["etag"] !== undefined);
   if (freshness.kind === "revalidate" && !hasValidator && htmlOnlyOnCloudflare) {
     findings.push({
       ...base,
@@ -141,8 +145,10 @@ export function htmlChecks(ctx: Context): Finding[] {
       detail:
         "Browsers ask before reusing the page, but without a validator the server can't answer 304 Not Modified, " +
         "so every visit downloads the whole HTML.",
-      evidence: [header(doc, "etag"), header(doc, "last-modified")],
-      fix: "Send an ETag (most servers and hosts can do this for static files) or Last-Modified with the HTML.",
+      evidence: [header(doc, "etag"), header(doc, "last-modified"), ...(behind ? [computed("CDN", `Cloudflare, in front of ${behind}`)] : [])],
+      fix: onCloudflare
+        ? `Check whether ${behind ?? "the origin"} sends an ETag for the HTML. If it does, a Cloudflare feature that rewrites HTML removes it: Email Obfuscation, Automatic HTTPS Rewrites, or Rocket Loader.`
+        : "Send an ETag (most servers and hosts can do this for static files) or Last-Modified with the HTML.",
       learnMore: learn.headers,
     });
   }
