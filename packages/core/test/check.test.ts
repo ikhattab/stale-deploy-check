@@ -96,6 +96,13 @@ describe("check()", () => {
     assert.equal(s["cdn.cdn-cache-control-unread"], "warn");
   });
 
+  test("HTML without a validator warns, except on Cloudflare when its files have an ETag", async () => {
+    assert.equal(severities(await check(server.url("/no-validator/")))["html.no-validator"], "warn");
+    const pages = find(await check(server.url("/pages/")), "html.no-validator");
+    assert.equal(pages?.severity, "info");
+    assert.match(pages!.detail, /Pages and Workers static assets/);
+  });
+
   test("a per-request ETag can never revalidate", async () => {
     const finding = find(await check(server.url("/dynamic/")), "html.revalidation");
     assert.equal(finding?.severity, "warn");

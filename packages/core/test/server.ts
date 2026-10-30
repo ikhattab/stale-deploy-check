@@ -129,6 +129,18 @@ const routes: Record<string, Route> = {
   // A server that answers any path with the same file.
   "/miss-anything/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html(`<script src="/miss-anything/assets/app.3f9a1c.js"></script>`) }),
 
+  // Cloudflare Pages: an ETag on every file but the HTML, as sdc-lab-good.pages.dev sends.
+  "/pages/": () => ({
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "cf-ray": "9a1f-MRS", server: "cloudflare" },
+    body: html(`<script type="module" src="/pages/assets/index-DeZm4FUm.js"></script>`),
+  }),
+  "/pages/assets/index-DeZm4FUm.js": () => ({
+    headers: { "content-type": "application/javascript", "cache-control": YEAR, etag: '"b351d601ca61bfc6ff974a8cc86b00a4"', "cf-ray": "9a1f-MRS", server: "cloudflare" },
+    body: "//",
+  }),
+  // The same HTML without Cloudflare: a host that could send a validator and doesn't.
+  "/no-validator/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html("") }),
+
   "/redirect": () => ({ status: 301, headers: { location: "/good/" } }),
   "/json": () => ({ headers: { "content-type": "application/json" }, body: "{}" }),
   "/blocked": () => ({ status: 403, headers: { "content-type": "text/html" }, body: "no" }),
