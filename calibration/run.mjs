@@ -55,7 +55,7 @@ console.error(`wrote ${out.pathname}`);
 
 async function checkSite(site) {
   const { code, stdout, stderr } = await run([...command, site.url, "--json", ...(site.args ?? [])], 90_000);
-  const base = { url: site.url, why: site.why, exit: code };
+  const base = { url: site.url, why: site.why, ...(site.expect ? { expect: site.expect } : {}), exit: code };
   if (code !== 0 && code !== 1) return { ...base, error: stderr.trim().split("\n").pop() || `exit ${code}` };
 
   const report = JSON.parse(stdout);
