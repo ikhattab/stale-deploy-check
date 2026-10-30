@@ -39,6 +39,19 @@ What they showed about Pages, 2026-10-30:
 - HTML never has an `ETag` or `Last-Modified`, compressed or not, while every other file has an `ETag` and answers `If-None-Match` with `304`. Workers static assets does the same (ihabkhattab.com).
 - A deploy removes the previous build's files. After sdc-lab-good went from 726f7f0 to 4aa1c8e, `--baseline` passed `assets.previous-kept` for v1's `index-DeZm4FUm.js`, but that `200` was `cf-cache-status: HIT` with `age: 465` at the MRS edge: the copy the v1 run's own request had put there. With a query string to skip that copy it's a `404`, and so is v1's lazy chunk, which nothing had requested. The pass was wrong: tabs that reach any other edge, or this one once the copy is evicted, get the 404. Since then, an old file that loads from the edge's cache is asked for again past it, and this is `assets.previous-removed`.
 
+## Review: 0.5.3 → 0.6.0, 2026-10-30
+
+Both run at once. Every change was checked against the headers in `reports/`:
+
+| Change | Sites | Why |
+| --- | --- | --- |
+| `html.no-validator` warn → info | ihabkhattab.com, solidjs.com, developers.cloudflare.com, sdc-lab-good, sdc-lab-defaults, sdc-lab-immutable-404, sdc-lab-sw | Cloudflare serves the HTML itself (Pages or Workers static assets): the files have an `ETag`, the HTML never does, and there's no setting for it |
+| `html.no-validator` stays warn | elk.zone, docusaurus.io, jestjs.io (Netlify), nodejs.org (Vercel) | Another platform behind Cloudflare sends an `ETag`, so a zone setting most likely drops it. The first version of the change made these info too; this run caught it |
+| `cdn.edge-rule-suspected` gone | remix.run | Fastly `HIT` in the 0.5.3 run, `MISS` in this one: the site, not the tool |
+| exit 2 → 0 | github.com | Timed out in the 0.5.3 run |
+
+Every sdc-lab site matched its `expect`. The `--baseline` change (an old file that only loads from the CDN's cache is removed) doesn't show here, since calibration doesn't pass `--baseline`; it was checked on sdc-lab-good, above.
+
 ## Review: 0.3.4 → working tree (`assets.missing-cached`), 2026-10-22
 
 The new probe warned on 15 sites. Each was checked against the probe's headers, and each is right:

@@ -12,7 +12,7 @@ import { ARTICLE } from "./links.ts";
 import { hasContentHash, missingTwin, versionParam } from "./naming.ts";
 import type { Finding, Report, RequestRecord, Severity } from "./types.ts";
 
-export const VERSION = "0.5.3";
+export const VERSION = "0.6.0";
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
   htmlMaxAge: 300,

@@ -98,7 +98,7 @@ The step runs after the deploy, so a red job means the deploy is already live: i
 **Other CI systems.** Save each report with `--out` and pass the previous one back with `--baseline`:
 
 ```sh
-npx -y stale-deploy-check@0.5 https://example.com/ --baseline previous-report.json --out report.json
+npx -y stale-deploy-check@0.6 https://example.com/ --baseline previous-report.json --out report.json
 ```
 
 Keep `report.json` somewhere that outlives the job (a cache, an artifact, a bucket) and restore it as `previous-report.json` next time. Pin the version while the project is pre-1.0, since findings can change between minor versions. If a finding doesn't apply to your site, `--ignore` it by id rather than dropping the step.
