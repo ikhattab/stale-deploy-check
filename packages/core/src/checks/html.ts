@@ -1,4 +1,5 @@
 import { browserFreshness, parseCacheControl, seconds } from "../cache-control.ts";
+import { detectCdn } from "../cdn.ts";
 import { formatDuration } from "../duration.ts";
 import { learn } from "../links.ts";
 import type { Finding } from "../types.ts";
@@ -114,7 +115,24 @@ export function htmlChecks(ctx: Context): Finding[] {
   }
 
   const hasValidator = doc.headers["etag"] !== undefined || doc.headers["last-modified"] !== undefined;
-  if (freshness.kind === "revalidate" && !hasValidator) {
+  // Cloudflare Pages and Workers static assets send an ETag with every file but the HTML, and have
+  // no setting for it (seen on sdc-lab-*.pages.dev and ihabkhattab.com). Not something to fix there.
+  const htmlOnlyOnCloudflare = detectCdn(doc)?.name === "Cloudflare" && ctx.assets.some((a) => a.record.headers["etag"] !== undefined);
+  if (freshness.kind === "revalidate" && !hasValidator && htmlOnlyOnCloudflare) {
+    findings.push({
+      ...base,
+      check: "html.no-validator",
+      severity: "info",
+      title: "The HTML has no ETag or Last-Modified, but its files do, as usual on Cloudflare",
+      detail:
+        "Without a validator the server can't answer 304 Not Modified, so every visit downloads the whole HTML. " +
+        "Cloudflare Pages and Workers static assets send an ETag with every file except HTML, and there's no setting for it. " +
+        "Cloudflare features that rewrite HTML (Email Obfuscation, Automatic HTTPS Rewrites, Rocket Loader) remove ETags too.",
+      evidence: [header(doc, "etag"), header(doc, "last-modified"), computed("CDN", "Cloudflare")],
+      fix: "On Pages or Workers static assets, nothing: the page is still revalidated, just not with a 304. Behind a Cloudflare zone, check whether those features are on.",
+      learnMore: learn.headers,
+    });
+  } else if (freshness.kind === "revalidate" && !hasValidator) {
     findings.push({
       ...base,
       check: "html.no-validator",
