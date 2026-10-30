@@ -1,6 +1,6 @@
 {
-  "version": "0.4.0",
-  "checkedAt": "2026-10-22T18:59:06.492Z",
+  "version": "0.6.0",
+  "checkedAt": "2026-10-30T20:32:22.194Z",
   "sites": [
     {
       "url": "https://nextjs.org/",
@@ -49,7 +49,7 @@
       "exit": 0,
       "resolved": "https://vercel.com/",
       "cdn": "Vercel",
-      "assets": 45,
+      "assets": 47,
       "summary": {
         "fail": 0,
         "warn": 1,
@@ -70,7 +70,7 @@
         {
           "check": "assets.not-checked",
           "severity": "info",
-          "title": "Skipped 25 over the 20-file limit"
+          "title": "Skipped 27 over the 20-file limit"
         },
         {
           "check": "cdn.detected",
@@ -167,7 +167,7 @@
       "exit": 0,
       "resolved": "https://nuxt.com/",
       "cdn": "Vercel",
-      "assets": 94,
+      "assets": 96,
       "summary": {
         "fail": 0,
         "warn": 2,
@@ -193,7 +193,7 @@
         {
           "check": "assets.not-checked",
           "severity": "info",
-          "title": "Skipped 74 over the 20-file limit"
+          "title": "Skipped 76 over the 20-file limit"
         },
         {
           "check": "cdn.detected",
@@ -375,15 +375,15 @@
       "assets": 1,
       "summary": {
         "fail": 0,
-        "warn": 1,
-        "info": 3,
+        "warn": 0,
+        "info": 4,
         "pass": 4
       },
       "findings": [
         {
           "check": "html.no-validator",
-          "severity": "warn",
-          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+          "severity": "info",
+          "title": "The HTML has no ETag or Last-Modified, but its files do, as usual on Cloudflare"
         },
         {
           "check": "assets.not-checked",
@@ -635,10 +635,10 @@
       "cdn": "Fastly",
       "assets": 14,
       "summary": {
-        "fail": 1,
-        "warn": 2,
+        "fail": 2,
+        "warn": 1,
         "info": 4,
-        "pass": 1
+        "pass": 2
       },
       "findings": [
         {
@@ -652,9 +652,9 @@
           "title": "Browsers reuse the HTML for 60 min without asking"
         },
         {
-          "check": "assets.short-cache",
-          "severity": "warn",
-          "title": "1 hashed file is cached for less than 30 days"
+          "check": "assets.unhashed-long-cache",
+          "severity": "fail",
+          "title": "1 file without a hash in the name is cached for a day or more"
         },
         {
           "check": "assets.missing-cached",
@@ -669,12 +669,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530060-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530038-MRS)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530060-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-mrs1530038-MRS) served the HTML from its cache"
         }
       ]
     },
@@ -684,7 +684,7 @@
       "exit": 0,
       "resolved": "https://remix.run/",
       "cdn": "Fastly",
-      "assets": 115,
+      "assets": 118,
       "summary": {
         "fail": 0,
         "warn": 2,
@@ -705,17 +705,17 @@
         {
           "check": "assets.not-checked",
           "severity": "info",
-          "title": "Skipped 95 over the 20-file limit"
+          "title": "Skipped 98 over the 20-file limit"
         },
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530057-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530027-MRS)"
         },
         {
           "check": "cdn.edge-rule-suspected",
           "severity": "warn",
-          "title": "Fastly (edge cache-mrs1530057-MRS) served the HTML from its cache, but the headers don't ask it to"
+          "title": "Fastly (edge cache-mrs1530027-MRS) served the HTML from its cache, but the headers don't ask it to"
         }
       ]
     },
@@ -751,12 +751,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530050-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530075-MRS)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530050-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-mrs1530075-MRS) served the HTML from its cache"
         }
       ]
     },
@@ -851,8 +851,8 @@
       "assets": 2,
       "summary": {
         "fail": 0,
-        "warn": 3,
-        "info": 3,
+        "warn": 2,
+        "info": 4,
         "pass": 1
       },
       "findings": [
@@ -863,8 +863,8 @@
         },
         {
           "check": "html.no-validator",
-          "severity": "warn",
-          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+          "severity": "info",
+          "title": "The HTML has no ETag or Last-Modified, but its files do, as usual on Cloudflare"
         },
         {
           "check": "assets.short-cache",
@@ -1003,12 +1003,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530025-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530058-MRS)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530025-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-mrs1530058-MRS) served the HTML from its cache"
         }
       ]
     },
@@ -1044,12 +1044,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530037-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530032-MRS)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530037-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-mrs1530032-MRS) served the HTML from its cache"
         }
       ]
     },
@@ -1075,7 +1075,7 @@
         {
           "check": "html.heuristic-freshness",
           "severity": "fail",
-          "title": "Browsers may reuse the HTML for about 61 s without asking"
+          "title": "Browsers may reuse the HTML for about 56 min without asking"
         },
         {
           "check": "assets.unhashed-long-cache",
@@ -1100,12 +1100,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530023-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530033-MRS)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530023-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-mrs1530033-MRS) served the HTML from its cache"
         }
       ]
     },
@@ -1207,12 +1207,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530038-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530059-MRS)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530038-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-mrs1530059-MRS) served the HTML from its cache"
         }
       ]
     },
@@ -1221,7 +1221,7 @@
       "why": "Rails, assets on a separate domain",
       "exit": 0,
       "resolved": "https://github.com/",
-      "assets": 112,
+      "assets": 113,
       "summary": {
         "fail": 0,
         "warn": 0,
@@ -1232,7 +1232,7 @@
         {
           "check": "assets.not-checked",
           "severity": "info",
-          "title": "Skipped 92 over the 20-file limit"
+          "title": "Skipped 93 over the 20-file limit"
         }
       ]
     },
@@ -1273,12 +1273,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530042-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530077-MRS)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530042-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-mrs1530077-MRS) served the HTML from its cache"
         }
       ]
     },
@@ -1288,7 +1288,7 @@
       "exit": 0,
       "resolved": "https://laravel.com/",
       "cdn": "Cloudflare",
-      "assets": 5,
+      "assets": 6,
       "summary": {
         "fail": 0,
         "warn": 1,
@@ -1309,7 +1309,7 @@
         {
           "check": "assets.no-immutable",
           "severity": "info",
-          "title": "5 hashed files could add immutable"
+          "title": "6 hashed files could add immutable"
         },
         {
           "check": "assets.not-checked",
@@ -1455,12 +1455,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530070-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530046-MRS)"
         },
         {
           "check": "cdn.edge-rule-suspected",
           "severity": "warn",
-          "title": "Fastly (edge cache-mrs1530070-MRS) served the HTML from its cache, but the headers don't ask it to"
+          "title": "Fastly (edge cache-mrs1530046-MRS) served the HTML from its cache, but the headers don't ask it to"
         }
       ]
     },
@@ -1491,12 +1491,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530066-MRS)"
+          "title": "Served through Fastly (edge cache-lin1730022-LIN)"
         },
         {
           "check": "cdn.edge-rule-suspected",
           "severity": "warn",
-          "title": "Fastly (edge cache-mrs1530066-MRS) served the HTML from its cache, but the headers don't ask it to"
+          "title": "Fastly (edge cache-lin1730022-LIN) served the HTML from its cache, but the headers don't ask it to"
         }
       ]
     },
@@ -1508,9 +1508,9 @@
       "assets": 0,
       "summary": {
         "fail": 0,
-        "warn": 2,
+        "warn": 3,
         "info": 2,
-        "pass": 1
+        "pass": 0
       },
       "findings": [
         {
@@ -1527,6 +1527,11 @@
           "check": "html.stale-while-revalidate",
           "severity": "warn",
           "title": "After the HTML goes stale, browsers may still show it for up to 6 s"
+        },
+        {
+          "check": "html.revalidation",
+          "severity": "warn",
+          "title": "Revalidating the HTML downloads it again instead of returning 304"
         },
         {
           "check": "assets.not-checked",
@@ -1592,11 +1597,11 @@
       "exit": 0,
       "resolved": "https://developers.cloudflare.com/",
       "cdn": "Cloudflare",
-      "assets": 10,
+      "assets": 9,
       "summary": {
         "fail": 0,
-        "warn": 4,
-        "info": 4,
+        "warn": 3,
+        "info": 5,
         "pass": 1
       },
       "findings": [
@@ -1607,8 +1612,8 @@
         },
         {
           "check": "html.no-validator",
-          "severity": "warn",
-          "title": "The HTML has no ETag or Last-Modified, so revalidating downloads it all"
+          "severity": "info",
+          "title": "The HTML has no ETag or Last-Modified, but its files do, as usual on Cloudflare"
         },
         {
           "check": "assets.unhashed",
@@ -1618,7 +1623,7 @@
         {
           "check": "assets.short-cache",
           "severity": "warn",
-          "title": "9 hashed files are cached for less than 30 days"
+          "title": "8 hashed files are cached for less than 30 days"
         },
         {
           "check": "assets.missing-cached",
@@ -1756,17 +1761,17 @@
         {
           "check": "html.heuristic-freshness",
           "severity": "fail",
-          "title": "Browsers may reuse the HTML for about 15 min without asking"
+          "title": "Browsers may reuse the HTML for about 9.5 hours without asking"
         },
         {
           "check": "assets.not-checked",
           "severity": "info",
-          "title": "No scripts or stylesheets were checked: all 24 are on other origins"
+          "title": "No scripts or stylesheets were checked: all 25 are on other origins"
         },
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through CloudFront (edge CAI50-P3)"
+          "title": "Served through CloudFront (edge CAI50-P1)"
         }
       ]
     },
@@ -1807,12 +1812,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530059-MRS)"
+          "title": "Served through Fastly (edge cache-lin1730041-LIN)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530059-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-lin1730041-LIN) served the HTML from its cache"
         }
       ]
     },
@@ -1820,7 +1825,7 @@
       "url": "https://web.dev/",
       "why": "Google hosting",
       "exit": 0,
-      "resolved": "https://web.dev/?hl=es-419",
+      "resolved": "https://web.dev/?hl=zh-cn",
       "assets": 0,
       "summary": {
         "fail": 0,
@@ -1923,12 +1928,12 @@
         {
           "check": "cdn.detected",
           "severity": "info",
-          "title": "Served through Fastly (edge cache-mrs1530071-MRS)"
+          "title": "Served through Fastly (edge cache-mrs1530052-MRS)"
         },
         {
           "check": "cdn.html-from-edge",
           "severity": "info",
-          "title": "Fastly (edge cache-mrs1530071-MRS) served the HTML from its cache"
+          "title": "Fastly (edge cache-mrs1530052-MRS) served the HTML from its cache"
         }
       ]
     },
@@ -1938,7 +1943,7 @@
       "exit": 0,
       "resolved": "https://nodejs.org/en",
       "cdn": "Cloudflare",
-      "assets": 23,
+      "assets": 22,
       "summary": {
         "fail": 0,
         "warn": 1,
@@ -1959,7 +1964,7 @@
         {
           "check": "assets.not-checked",
           "severity": "info",
-          "title": "Skipped 3 over the 20-file limit"
+          "title": "Skipped 2 over the 20-file limit"
         },
         {
           "check": "cdn.detected",
@@ -1995,7 +2000,7 @@
         {
           "check": "assets.missing-cached",
           "severity": "warn",
-          "title": "The HTML page served for a missing js file is cached for about 64 min"
+          "title": "The HTML page served for a missing js file is cached for about 2.4 hours"
         },
         {
           "check": "cdn.detected",
@@ -2042,6 +2047,179 @@
           "check": "assets.no-immutable",
           "severity": "info",
           "title": "2 hashed files could add immutable"
+        }
+      ]
+    },
+    {
+      "url": "https://sdc-lab-good.pages.dev/",
+      "why": "sdc-lab: Cloudflare Pages set up as the article recommends",
+      "expect": {},
+      "exit": 0,
+      "resolved": "https://sdc-lab-good.pages.dev/",
+      "cdn": "Cloudflare",
+      "assets": 2,
+      "summary": {
+        "fail": 0,
+        "warn": 0,
+        "info": 2,
+        "pass": 4
+      },
+      "findings": [
+        {
+          "check": "html.no-validator",
+          "severity": "info",
+          "title": "The HTML has no ETag or Last-Modified, but its files do, as usual on Cloudflare"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        }
+      ]
+    },
+    {
+      "url": "https://sdc-lab-defaults.pages.dev/",
+      "why": "sdc-lab: Cloudflare Pages with no _headers, no 404.html, no build id",
+      "expect": {
+        "assets.short-cache": "warn"
+      },
+      "exit": 0,
+      "resolved": "https://sdc-lab-defaults.pages.dev/",
+      "cdn": "Cloudflare",
+      "assets": 2,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 3,
+        "pass": 2
+      },
+      "findings": [
+        {
+          "check": "page.build-id",
+          "severity": "info",
+          "title": "The page doesn't say which build it is"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "info",
+          "title": "The HTML has no ETag or Last-Modified, but its files do, as usual on Cloudflare"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "2 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        }
+      ]
+    },
+    {
+      "url": "https://sdc-lab-html-cached.pages.dev/",
+      "why": "sdc-lab: Cloudflare Pages with max-age=3600 on every path",
+      "expect": {
+        "html.max-age": "fail",
+        "assets.short-cache": "warn",
+        "assets.missing-cached": "warn"
+      },
+      "exit": 1,
+      "resolved": "https://sdc-lab-html-cached.pages.dev/",
+      "cdn": "Cloudflare",
+      "assets": 2,
+      "summary": {
+        "fail": 1,
+        "warn": 2,
+        "info": 1,
+        "pass": 1
+      },
+      "findings": [
+        {
+          "check": "html.max-age",
+          "severity": "fail",
+          "title": "Browsers reuse the HTML for 60 min without asking"
+        },
+        {
+          "check": "assets.short-cache",
+          "severity": "warn",
+          "title": "2 hashed files are cached for less than 30 days"
+        },
+        {
+          "check": "assets.missing-cached",
+          "severity": "warn",
+          "title": "The HTML page served for a missing js file is cached for 60 min"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        }
+      ]
+    },
+    {
+      "url": "https://sdc-lab-immutable-404.pages.dev/",
+      "why": "sdc-lab: a year-long /assets/* rule over the SPA fallback",
+      "expect": {
+        "assets.missing-cached": "warn"
+      },
+      "exit": 0,
+      "resolved": "https://sdc-lab-immutable-404.pages.dev/",
+      "cdn": "Cloudflare",
+      "assets": 2,
+      "summary": {
+        "fail": 0,
+        "warn": 1,
+        "info": 2,
+        "pass": 3
+      },
+      "findings": [
+        {
+          "check": "html.no-validator",
+          "severity": "info",
+          "title": "The HTML has no ETag or Last-Modified, but its files do, as usual on Cloudflare"
+        },
+        {
+          "check": "assets.missing-cached",
+          "severity": "warn",
+          "title": "The HTML page served for a missing js file is cached for 365 days"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
+        }
+      ]
+    },
+    {
+      "url": "https://sdc-lab-sw.pages.dev/",
+      "why": "sdc-lab: good headers, cache-first service worker the CLI can only detect",
+      "expect": {},
+      "exit": 0,
+      "resolved": "https://sdc-lab-sw.pages.dev/",
+      "cdn": "Cloudflare",
+      "assets": 2,
+      "summary": {
+        "fail": 0,
+        "warn": 0,
+        "info": 3,
+        "pass": 4
+      },
+      "findings": [
+        {
+          "check": "page.service-worker",
+          "severity": "info",
+          "title": "The page registers a service worker"
+        },
+        {
+          "check": "html.no-validator",
+          "severity": "info",
+          "title": "The HTML has no ETag or Last-Modified, but its files do, as usual on Cloudflare"
+        },
+        {
+          "check": "cdn.detected",
+          "severity": "info",
+          "title": "Served through Cloudflare (edge MRS)"
         }
       ]
     }

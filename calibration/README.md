@@ -4,10 +4,10 @@ Unit tests show the checks do what the code says. This shows whether that's righ
 
 ```sh
 npm run build
-node calibration/run.mjs --cli npm:0.4.0 &   # the last release, through npx
+node calibration/run.mjs --cli npm:0.6.0 &   # the last release, through npx
 node calibration/run.mjs                      # the working tree
 wait
-node calibration/report.mjs calibration/results/npm-0.4.0.json calibration/results/local.json
+node calibration/report.mjs calibration/results/npm-0.6.0.json calibration/results/local.json
 ```
 
 Run both at the same time so a difference comes from the tool, not from a site that changed in between. Each run makes about 22 requests per site, 4 sites at a time.
@@ -51,6 +51,8 @@ Both run at once. Every change was checked against the headers in `reports/`:
 | exit 2 → 0 | github.com | Timed out in the 0.5.3 run |
 
 Every sdc-lab site matched its `expect`. The `--baseline` change (an old file that only loads from the CDN's cache is removed) doesn't show here, since calibration doesn't pass `--baseline`; it was checked on sdc-lab-good, above.
+
+The published 0.6.0 gave the same results, apart from gohugo.io and squoosh.app timing out as usual. `results/npm-0.6.0.json` is the baseline now.
 
 ## Review: 0.3.4 → working tree (`assets.missing-cached`), 2026-10-22
 
