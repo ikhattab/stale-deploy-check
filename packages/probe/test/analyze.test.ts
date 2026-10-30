@@ -77,11 +77,16 @@ describe("tab.build", () => {
     assert.match(f.title, /^Couldn't load the live page/);
   });
 
-  test("a live page the service worker answered isn't the server's", async () => {
-    const report = await analyze(tab("/released/", { buildId: build("41") }), { ...env, timing: () => ({ workerStart: 3, transferSize: 0, deliveryType: "cache-storage" }) });
+  test("past a cache-first worker, the server's build is compared", async () => {
+    // The worker answers /released/ from its cache, but a unique query string misses its copy and reaches the server.
+    const timing = (url: string) => (url.includes("?") ? { workerStart: 3, transferSize: 0, deliveryType: "cache" } : { workerStart: 3, transferSize: 0, deliveryType: "cache-storage" });
+    const report = await analyze(tab("/released/", { buildId: build("41"), navigation: fromWorker }), { ...env, timing });
     const f = find(report, "tab.build")!;
-    assert.equal(f.severity, "info");
+    assert.equal(f.severity, "fail");
     assert.equal(f.layer, "service-worker");
+    assert.equal(f.title, "This tab loaded build 41 from the service worker after build 42 was deployed");
+    assert.ok(f.evidence.some((e) => e.kind === "computed" && e.label === "live page" && /past the service worker's cache/.test(e.value)));
+    assert.equal(report.requests.length >= 2 && new URL(report.requests[1]!.url).searchParams.has("stale-deploy-check"), true);
   });
 
   test("a copy from Cache Storage is told by its Date, whatever deliveryType says", async () => {
@@ -99,7 +104,9 @@ describe("tab.build", () => {
       timing: () => ({ workerStart: 2335.6, transferSize: 0, deliveryType: "" }),
     };
     const report = await analyze(tab("/released/", { buildId: build("42") }), fromCacheStorage);
+    // Every answer here is the stored copy, the query string's too, as from a worker that ignores the query.
     assert.equal(find(report, "tab.build")?.title, "The service worker answered the probe's request for the live page from a cache");
+    assert.equal(report.requests.filter((r) => r.method === "GET").length, 2);
   });
 });
 

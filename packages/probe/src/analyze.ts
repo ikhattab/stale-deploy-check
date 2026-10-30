@@ -43,6 +43,8 @@ interface Live {
   assets: string[];
   /** The tab's service worker answered the request from a cache, so this isn't what the server has. */
   fromWorker: boolean;
+  /** The worker answered the first request from a cache; this is a second one, with a unique query string it had no copy for. */
+  pastWorker?: boolean;
 }
 
 interface Asset {
@@ -59,13 +61,15 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
   const requests: RequestRecord[] = [];
   const request = (url: string, method: "GET" | "HEAD", readBody = false) => send(env, requests, url, method, readBody);
 
+  const nonce = Date.now().toString(36);
   let live: Live | { error: string };
   try {
     const { record, body = "" } = await request(tab.url, "GET", true);
-    if (record.status >= 400 || !/text\/html|application\/xhtml\+xml/i.test(record.headers["content-type"] ?? "")) {
+    if (record.status >= 400 || !isHtml(record)) {
       live = { error: `${record.url} returned ${record.status} ${record.headers["content-type"] ?? ""}`.trim() };
     } else {
       live = { record, ...env.readPage(body, record.url), fromWorker: answeredByWorker(env.timing?.(tab.url), record) };
+      if (live.fromWorker) live = (await pastWorker(tab, env, request, nonce)) ?? live;
     }
   } catch (error) {
     live = { error: describe(error) };
@@ -83,7 +87,6 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
   };
   // The CDN can still have a copy of a file the deploy removed: on sdc-lab-good.pages.dev, the one this tab's
   // own request put there. Files the tab hasn't loaded yet have no copy, so ask past it, next to a current file.
-  const nonce = Date.now().toString(36);
   const assets = await mapLimit(changed.slice(0, MAX_ASSET_REQUESTS), CONCURRENCY, async (url): Promise<Asset> => {
     try {
       const record = await headOrGet(url);
@@ -122,6 +125,32 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
     findings,
     summary: summarize(findings),
   };
+}
+
+/**
+ * The live page again, past the service worker's cache. A cache-first worker looks a request up by its URL, so a unique
+ * query string misses its copy and goes to the network (sdc-lab-sw.pages.dev). The answer only counts when its Date
+ * says the server just made it: a worker that ignores the query, or answers every page with one stored shell, gives
+ * back its old copy again, and then the probe can't tell.
+ */
+async function pastWorker(
+  tab: TabSnapshot,
+  env: ProbeEnv,
+  request: (url: string, method: "GET" | "HEAD", readBody?: boolean) => Promise<{ record: RequestRecord; body?: string }>,
+  nonce: string,
+): Promise<Live | undefined> {
+  try {
+    const { record, body = "" } = await request(uncachedUrl(tab.url, nonce), "GET", true);
+    const stored = storedFor(record, Date.now());
+    if (record.status >= 400 || !isHtml(record) || stored === undefined || stored > STORED_AFTER_S) return undefined;
+    return { record, ...env.readPage(body, record.url), fromWorker: false, pastWorker: true };
+  } catch {
+    return undefined;
+  }
+}
+
+function isHtml(record: RequestRecord): boolean {
+  return /text\/html|application\/xhtml\+xml/i.test(record.headers["content-type"] ?? "");
 }
 
 /** A stored copy older than this, by its own Date and Age, didn't come from the network just now. Allows for clock skew. */
@@ -206,6 +235,7 @@ function buildCheck(tab: TabSnapshot, live: Live | { error: string }, source: Ht
   }
 
   const { tabLabel, liveLabel, evidence } = compared;
+  if (live.pastWorker) evidence.push(computed("live page", "asked for past the service worker's cache, with a unique query string"));
   if (compared.same) {
     return {
       ...base,
