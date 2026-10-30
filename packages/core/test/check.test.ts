@@ -155,6 +155,40 @@ describe("check()", () => {
     assert.equal(find(kept, "assets.previous-kept")?.severity, "pass");
   });
 
+  describe("baseline: an old file the CDN still has a copy of", () => {
+    const old = (name: string) => server.url(`/pages-deploy/assets/${name}`);
+
+    test("fails when the deploy no longer has it, asked for past the copy", async () => {
+      const report = await check(server.url("/pages-deploy/"), { baseline: { assets: [old("index-DeZm4FUm.js")] } });
+      const removed = find(report, "assets.previous-removed");
+      assert.equal(removed?.severity, "fail");
+      assert.equal(removed?.title, "1 file from the previous deploy no longer loads except from the CDN's cache");
+      assert.match(removed!.detail, /only loaded from the CDN's cache/);
+      const statuses = removed!.evidence.flatMap((e) => (e.kind === "status" ? [[e.url.replace(/\?.*/, "?…"), e.status]] : []));
+      assert.deepEqual(statuses, [
+        [old("index-DeZm4FUm.js"), 200],
+        [`${old("index-DeZm4FUm.js")}?…`, 404],
+        [`${old("index-ibBHxIU0.js")}?…`, 200],
+      ]);
+      assert.ok(removed!.evidence.some((e) => e.kind === "header" && e.name === "cf-cache-status" && e.value === "HIT"));
+    });
+
+    test("passes when the deploy still has it", async () => {
+      const report = await check(server.url("/pages-deploy/"), { baseline: { assets: [old("kept-Ab12Cd34.js")] } });
+      const kept = find(report, "assets.previous-kept");
+      assert.equal(kept?.severity, "pass");
+      assert.match(kept!.detail, /1 came from the CDN's cache, and load past it too/);
+    });
+
+    test("is only info when the host doesn't ignore the query, so the copy is all there is to check", async () => {
+      const report = await check(server.url("/strict-query/"), { baseline: { assets: [server.url("/strict-query/assets/old-Zx98Cv76.js")] } });
+      assert.equal(find(report, "assets.previous-removed"), undefined);
+      const kept = find(report, "assets.previous-kept");
+      assert.equal(kept?.severity, "info");
+      assert.match(kept!.title, /only the CDN's cached copy could be checked/);
+    });
+  });
+
   test("baseline: a 403 or an HTML page in place of a script counts as gone", async () => {
     const forbidden = server.url("/good/assets/forbidden.333ccc.js");
     const fallback = server.url("/good/assets/fallback.444ddd.js");

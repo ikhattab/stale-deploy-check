@@ -9,6 +9,19 @@ type Route = (req: IncomingMessage) => { status?: number; headers?: OutgoingHttp
 const html = (body: string): string => `<!doctype html><html><head>${body}</head><body></body></html>`;
 const asset = (cacheControl?: string): Route => () => ({ headers: { "content-type": "text/javascript", ...(cacheControl ? { "cache-control": cacheControl } : {}) }, body: "//" });
 
+/**
+ * A script behind Cloudflare. Without a query string the edge answers from its copy when it has one;
+ * with one, the request reaches the deploy, which has the file or doesn't.
+ */
+const edgeAsset =
+  ({ cached, deployed }: { cached: boolean; deployed: boolean }): Route =>
+  (req) => {
+    const edge = { "cf-ray": "9a1f-MRS", server: "cloudflare" };
+    if (cached && !req.url?.includes("?")) return { headers: { ...edge, "content-type": "application/javascript", "cache-control": YEAR, "cf-cache-status": "HIT", age: "465" }, body: "//" };
+    if (!deployed) return { status: 404, headers: { ...edge, "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }, body: "not found" };
+    return { headers: { ...edge, "content-type": "application/javascript", "cache-control": YEAR, "cf-cache-status": "MISS" }, body: "//" };
+  };
+
 let dynamicCounter = 0;
 
 /** One scenario per path prefix, each built to trigger specific findings. */
@@ -138,6 +151,23 @@ const routes: Record<string, Route> = {
     headers: { "content-type": "application/javascript", "cache-control": YEAR, etag: '"b351d601ca61bfc6ff974a8cc86b00a4"', "cf-ray": "9a1f-MRS", server: "cloudflare" },
     body: "//",
   }),
+  // After a Pages deploy, as sdc-lab-good.pages.dev answered: the deploy no longer has the old script,
+  // but the edge kept a copy from an earlier request. A query string gets past the copy.
+  "/pages-deploy/": () => ({
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "cf-ray": "9a1f-MRS", server: "cloudflare" },
+    body: html(`<script type="module" src="/pages-deploy/assets/index-ibBHxIU0.js"></script>`),
+  }),
+  "/pages-deploy/assets/index-ibBHxIU0.js": edgeAsset({ cached: true, deployed: true }),
+  "/pages-deploy/assets/index-DeZm4FUm.js": edgeAsset({ cached: true, deployed: false }),
+  "/pages-deploy/assets/kept-Ab12Cd34.js": edgeAsset({ cached: true, deployed: true }),
+  // A host that answers any query string with a 404, so the CDN's copy is all that can be checked.
+  "/strict-query/": () => ({
+    headers: { "content-type": "text/html", "cache-control": "no-cache", "cf-ray": "9a1f-MRS", server: "cloudflare" },
+    body: html(`<script type="module" src="/strict-query/assets/app-Qw12Er34.js"></script>`),
+  }),
+  "/strict-query/assets/app-Qw12Er34.js": (req) => (req.url?.includes("?") ? { status: 404 } : asset(YEAR)(req)),
+  "/strict-query/assets/old-Zx98Cv76.js": (req) => (req.url?.includes("?") ? { status: 404 } : edgeAsset({ cached: true, deployed: true })(req)),
+
   // The same HTML without Cloudflare: a host that could send a validator and doesn't.
   "/no-validator/": () => ({ headers: { "content-type": "text/html", "cache-control": "no-cache" }, body: html("") }),
 
