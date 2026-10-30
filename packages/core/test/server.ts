@@ -14,10 +14,12 @@ const asset = (cacheControl?: string): Route => () => ({ headers: { "content-typ
  * with one, the request reaches the deploy, which has the file or doesn't.
  */
 const edgeAsset =
-  ({ cached, deployed }: { cached: boolean; deployed: boolean }): Route =>
+  ({ cached, deployed, fallback = false }: { cached: boolean; deployed: boolean; fallback?: boolean }): Route =>
   (req) => {
     const edge = { "cf-ray": "9a1f-MRS", server: "cloudflare" };
     if (cached && !req.url?.includes("?")) return { headers: { ...edge, "content-type": "application/javascript", "cache-control": YEAR, "cf-cache-status": "HIT", age: "465" }, body: "//" };
+    // Without a 404.html, Pages answers a missing file with the app's HTML (sdc-lab-html-cached, sdc-lab-defaults).
+    if (!deployed && fallback) return { headers: { ...edge, "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate" }, body: html("") };
     if (!deployed) return { status: 404, headers: { ...edge, "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }, body: "not found" };
     return { headers: { ...edge, "content-type": "application/javascript", "cache-control": YEAR, "cf-cache-status": "MISS" }, body: "//" };
   };
@@ -160,6 +162,7 @@ const routes: Record<string, Route> = {
   "/pages-deploy/assets/index-ibBHxIU0.js": edgeAsset({ cached: true, deployed: true }),
   "/pages-deploy/assets/index-DeZm4FUm.js": edgeAsset({ cached: true, deployed: false }),
   "/pages-deploy/assets/kept-Ab12Cd34.js": edgeAsset({ cached: true, deployed: true }),
+  "/pages-deploy/assets/index-_wtOz3oV.js": edgeAsset({ cached: true, deployed: false, fallback: true }),
   // A host that answers any query string with a 404, so the CDN's copy is all that can be checked.
   "/strict-query/": () => ({
     headers: { "content-type": "text/html", "cache-control": "no-cache", "cf-ray": "9a1f-MRS", server: "cloudflare" },

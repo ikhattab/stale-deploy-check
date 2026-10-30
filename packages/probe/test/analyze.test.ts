@@ -170,6 +170,20 @@ describe("files this tab loaded", () => {
     ]);
   });
 
+  test("past the CDN's copy, an HTML fallback is shown with its content type", async () => {
+    // sdc-lab-html-cached and sdc-lab-defaults in Chrome: no 404.html, so past the copy the old script got the
+    // app's HTML with a 200. Without the content type, the evidence read as a file that still loads.
+    const old = server.url("/pages-deploy/assets/index-_wtOz3oV.js");
+    const f = find(await analyze(tab("/pages-deploy/", { assets: [old] }), env), "tab.assets-removed")!;
+    assert.equal(f.severity, "fail");
+    assert.match(f.detail, /serves index\.html for missing files/);
+    const pastCache = f.evidence.filter((e) => "url" in e && e.url.startsWith(`${old}?`));
+    assert.deepEqual(
+      pastCache.map((e) => (e.kind === "status" ? e.status : e.kind === "header" ? `${e.name}: ${e.value}` : "")),
+      [200, "content-type: text/html; charset=utf-8"],
+    );
+  });
+
   test("a file the CDN has a copy of, and the deploy still has, passes", async () => {
     const report = await analyze(tab("/pages-deploy/", { assets: [server.url("/pages-deploy/assets/kept-Ab12Cd34.js")] }), env);
     assert.equal(find(report, "tab.assets-kept")?.severity, "pass");
