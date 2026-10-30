@@ -29,7 +29,18 @@ function review(results) {
     lines.push(`## ${key} (${entries.length})`, "", ...entries.map((e) => `- ${e}`), "");
   }
   if (errors.length > 0) lines.push(`## couldn't run (${errors.length})`, "", ...errors.map((s) => `- ${s.url}  ${s.error}`), "");
+  const unmet = results.sites.filter((s) => s.expect && !s.error).map((s) => [s.url, unexpected(s)]).filter(([, changes]) => changes.length > 0);
+  if (unmet.length > 0) lines.push(`## not what the site expects (${unmet.length})`, "", ...unmet.map(([url, changes]) => `- ${url}: ${changes.join(", ")}`), "");
   return lines.join("\n");
+}
+
+/** For a site with an `expect` in sites.json: the fails and warns it got but shouldn't, and the ones it should but didn't. */
+function unexpected(site) {
+  const got = new Map((site.findings ?? []).filter((f) => f.severity === "fail" || f.severity === "warn").map((f) => [f.check, f.severity]));
+  const want = new Map(Object.entries(site.expect));
+  const extra = [...got].filter(([check, severity]) => want.get(check) !== severity).map(([check, severity]) => `+ ${severity} ${check}`);
+  const missing = [...want].filter(([check, severity]) => got.get(check) !== severity).map(([check, severity]) => `- ${severity} ${check}`);
+  return [...extra, ...missing];
 }
 
 function diff(before, after) {

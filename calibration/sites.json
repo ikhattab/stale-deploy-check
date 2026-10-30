@@ -48,5 +48,10 @@
   { "url": "https://nodejs.org/en", "why": "Next.js, Node.js site" },
   { "url": "https://excalidraw.com/", "why": "Vite PWA with a service worker" },
   { "url": "https://squoosh.app/", "why": "PWA with a service worker" },
-  { "url": "https://news.ycombinator.com/", "why": "Server-rendered, minimal assets" }
+  { "url": "https://news.ycombinator.com/", "why": "Server-rendered, minimal assets" },
+  { "url": "https://sdc-lab-good.pages.dev/", "why": "sdc-lab: Cloudflare Pages set up as the article recommends", "expect": {} },
+  { "url": "https://sdc-lab-defaults.pages.dev/", "why": "sdc-lab: Cloudflare Pages with no _headers, no 404.html, no build id", "expect": { "assets.short-cache": "warn" } },
+  { "url": "https://sdc-lab-html-cached.pages.dev/", "why": "sdc-lab: Cloudflare Pages with max-age=3600 on every path", "expect": { "html.max-age": "fail", "assets.short-cache": "warn", "assets.missing-cached": "warn" } },
+  { "url": "https://sdc-lab-immutable-404.pages.dev/", "why": "sdc-lab: a year-long /assets/* rule over the SPA fallback", "expect": { "assets.missing-cached": "warn" } },
+  { "url": "https://sdc-lab-sw.pages.dev/", "why": "sdc-lab: good headers, cache-first service worker the CLI can only detect", "expect": {} }
 ]

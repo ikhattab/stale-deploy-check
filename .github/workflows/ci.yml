@@ -87,11 +87,12 @@ jobs:
           command: "false"
 
       # latest, not the action's default, which names a version that isn't on npm until it's published.
+      # sdc-lab-good is a real Cloudflare Pages site kept passing on purpose (see calibration/README.md).
       - name: The published CLI from npm
         id: npm
         uses: ./
         with:
-          url: https://ihabkhattab.com/
+          url: https://sdc-lab-good.pages.dev/
           baseline: "false"
           version: latest
 

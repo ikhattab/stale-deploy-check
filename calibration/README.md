@@ -18,6 +18,27 @@ Run both at the same time so a difference comes from the tool, not from a site t
 
 Before a release, read the diff and check each change against the headers in `reports/`. Every wrong call becomes a test in `packages/core/test/`, and the release's results replace the committed baseline.
 
+## The sdc-lab sites
+
+The last five sites in `sites.json` are Cloudflare Pages sites built to trigger specific findings, from the private repos `ikhattab/sdc-lab-*`. Each one deploys from its repo's `main`, so they're the only sites here that can be redeployed on purpose: to test `--baseline`, or a tab left open across a deploy.
+
+Each has an `expect`: the fails and warns it should get, and no others. `report.mjs results.json` lists any site that doesn't match under "not what the site expects". A mismatch is either a wrong call by the tool or a change at Cloudflare; check the headers in `reports/` to tell which.
+
+| Site | Set up with | Expects |
+| --- | --- | --- |
+| sdc-lab-good | `/assets/*` immutable, a `404.html`, a build id, reload on `vite:preloadError` | nothing |
+| sdc-lab-defaults | no `_headers`, no `404.html`, no build id | `assets.short-cache` warn |
+| sdc-lab-html-cached | `max-age=3600` on every path | `html.max-age` fail; `assets.short-cache`, `assets.missing-cached` warn |
+| sdc-lab-immutable-404 | `/assets/*` immutable, no `404.html` | `assets.missing-cached` warn |
+| sdc-lab-sw | as good, plus a cache-first service worker | nothing (the CLI only reports `page.service-worker`) |
+
+What they showed about Pages, 2026-10-30:
+
+- Every response gets `public, max-age=0, must-revalidate` unless `_headers` says otherwise, hashed files included.
+- `_headers` rules don't apply to real 404s, which get `no-store`. They do apply to the SPA fallback: without a `404.html`, a missing `/assets/x.js` gets the app's HTML with `200` and whatever the `/assets/*` rule says, a year in sdc-lab-immutable-404.
+- HTML never has an `ETag` or `Last-Modified`, compressed or not, while every other file has an `ETag` and answers `If-None-Match` with `304`. Workers static assets does the same (ihabkhattab.com).
+- A deploy removes the previous build's files. After sdc-lab-good went from 726f7f0 to 4aa1c8e, `--baseline` passed `assets.previous-kept` for v1's `index-DeZm4FUm.js`, but that `200` was `cf-cache-status: HIT` with `age: 465` at the MRS edge: the copy the v1 run's own request had put there. With a query string to skip that copy it's a `404`, and so is v1's lazy chunk, which nothing had requested. The pass was wrong: tabs that reach any other edge, or this one once the copy is evicted, get the 404.
+
 ## Review: 0.3.4 → working tree (`assets.missing-cached`), 2026-10-22
 
 The new probe warned on 15 sites. Each was checked against the probe's headers, and each is right:
