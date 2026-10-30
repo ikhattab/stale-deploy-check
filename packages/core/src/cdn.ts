@@ -26,6 +26,14 @@ export function detectCdn(record: RequestRecord): Cdn | undefined {
   return undefined;
 }
 
+/** The platform behind Cloudflare, when its headers came through: Vercel or Netlify behind a Cloudflare zone. */
+export function platformBehindCloudflare(record: RequestRecord): CdnName | undefined {
+  const { "cf-ray": _ray, server, ...rest } = record.headers;
+  const headers = server === undefined || server.toLowerCase() === "cloudflare" ? rest : { ...rest, server };
+  if (/"?Netlify[^;,]*"?;/i.test(rest["cache-status"] ?? "")) return "Netlify";
+  return detectCdn({ ...record, headers })?.name;
+}
+
 export interface EdgeCacheState {
   /** The response came out of a shared cache rather than from the origin. */
   hit: boolean;
