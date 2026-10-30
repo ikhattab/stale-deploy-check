@@ -1,4 +1,5 @@
-export { check, summarize, ownedBy, mapLimit, DEFAULT_THRESHOLDS, VERSION, type CheckOptions } from "./run.ts";
+export { check, summarize, ownedBy, mapLimit, uncachedUrl, DEFAULT_THRESHOLDS, VERSION, type CheckOptions } from "./run.ts";
+export { edgeCacheState } from "./cdn.ts";
 export { parsePage, buildIdFromMeta, type BuildId, type ParsedPage } from "./html.ts";
 export { servesHtml, plural } from "./checks/context.ts";
 export { fixPrompt, type PromptInput } from "./prompt.ts";

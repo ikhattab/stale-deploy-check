@@ -170,7 +170,7 @@ async function revalidate(recorder: Recorder, doc: RequestRecord): Promise<Reque
 }
 
 /** The URL with a query parameter no CDN has a copy for. */
-function uncachedUrl(url: string, nonce: string): string {
+export function uncachedUrl(url: string, nonce: string): string {
   const u = new URL(url);
   u.searchParams.set("stale-deploy-check", nonce);
   return u.href;
