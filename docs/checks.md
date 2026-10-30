@@ -114,6 +114,7 @@ The probe (`packages/probe`) runs inside a tab, from the [browser extension](htt
 
 1. `GET` the tab's URL, to compare with the live page.
 2. `HEAD` each script and stylesheet this tab loaded, on the site's own origins, that the live page doesn't reference (up to 50). Any error status is checked again with `GET`, since some servers answer `HEAD` with a 404 for a file `GET` serves (Cloudflare Zaraz).
+3. One of those that loads from a CDN's cache (a cache-status `HIT`, or `Age` > 0) is requested again with a unique `?stale-deploy-check=` query, which the CDN has no copy for, and so is one file the live page references, to show the host ignores the query. The CDN's copy is often the one this tab's own request left there.
 
 Requests go through the tab's service worker, if it has one. Response headers on other origins can only be read when they allow it with CORS.
 
@@ -122,13 +123,14 @@ Requests go through the tab's service worker, if it has one. Response headers on
 | `tab.build` | pass | The tab and the live page have the same build id, or without one, the tab loaded every script and stylesheet the live page references. | Q8 |
 | `tab.build` | fail | The tab is on an older build and loaded after the live page's `Last-Modified`. The layer is where its HTML came from: `service-worker`, `http-cache`, or `cdn` when it came over the network or as a 304. A `Last-Modified` within 5 s of `Date` is the server's clock, not a deploy, and doesn't count. | Q3, Q5, Q7 |
 | `tab.build` | warn | An older build, from the service worker or the HTTP cache, with no deploy time to compare. | Q3, Q7 |
-| `tab.build` | info | An older build in a tab that loaded before the deploy, or came from the network with no deploy time: an open tab, as expected. Also: the live page couldn't be loaded, the service worker answered the probe's request for it from a cache (Chrome's `deliveryType` is `cache-storage` or `cache`, or 0 bytes transferred elsewhere), or there's nothing to compare. | Q6, Q8 |
+| `tab.build` | info | An older build in a tab that loaded before the deploy, or came from the network with no deploy time: an open tab, as expected. Also: the live page couldn't be loaded, the service worker answered the probe's request for it from a cache, or there's nothing to compare. The worker answered from a cache when Chrome's `deliveryType` is `cache-storage`, or the response's `Date` (plus any `Age`) is more than 120 s old: Chrome reports a `fetch()` the worker answers from Cache Storage as `deliveryType: ""`, and one it passes to the network as `"cache"` (seen on sdc-lab-sw). Without a `Date`, 0 bytes transferred. | Q6, Q8 |
 | `tab.html-source` | info | Where the tab's HTML came from, as Navigation Timing says: the service worker (`workerStart` > 0), the HTTP cache (0 bytes transferred), a 304 (Chrome's `deliveryType: "cache"` with bytes transferred, or fewer bytes than the body elsewhere), or the network. | Q8 |
 | `tab.sw-waiting` | warn | A new service worker is installed and waiting. | Q7 |
 | `tab.sw-controlled` | info / pass | A service worker controls the tab (info), or none is registered (pass). Not reported outside a secure context. | Q7 |
 | `tab.sw-cached-page` | warn / info | Cache Storage holds the page, `/` or `/index.html`. warn when its build id differs from the live page's. | Q7 |
-| `tab.assets-removed` | fail | A file this tab loaded, and the live page no longer references, returns 4xx/5xx or an HTML page. | Q6 |
-| `tab.assets-kept` | pass | Every such file still loads, or the live page still references all of them. | Q6 |
+| `tab.assets-removed` | fail | A file this tab loaded, and the live page no longer references, returns 4xx/5xx or an HTML page. Also when it loads only from the CDN's cache: past the cache it's an error while a current file loads. Files the tab hasn't loaded yet have no such copy. | Q6 |
+| `tab.assets-kept` | pass | Every such file still loads, past the CDN's cache too, or the live page still references all of them. | Q6 |
+| `tab.assets-kept` | info | Such files load only from the CDN's cache, and a current file fails past it too (or there's none to try), so whether the deploy still has them couldn't be checked. | Q6 |
 | `tab.assets-not-checked` | info | Files on other origins, past the limit of 50, or whose request failed (usually CORS). Also when Resource Timing holds 250 entries, its default limit, so files loaded after that are only seen if the DOM still has them. | Q6 |
 
 ## Decided

@@ -78,22 +78,47 @@ describe("tab.build", () => {
   });
 
   test("a live page the service worker answered isn't the server's", async () => {
-    const report = await analyze(tab("/released/", { buildId: build("41") }), { ...env, timing: () => ({ workerStart: 3, transferSize: 0 }) });
+    const report = await analyze(tab("/released/", { buildId: build("41") }), { ...env, timing: () => ({ workerStart: 3, transferSize: 0, deliveryType: "cache-storage" }) });
     const f = find(report, "tab.build")!;
     assert.equal(f.severity, "info");
     assert.equal(f.layer, "service-worker");
   });
+
+  test("a copy from Cache Storage is told by its Date, whatever deliveryType says", async () => {
+    // sdc-lab-sw.pages.dev in Chrome: a cache-first worker answered the probe with the page it stored 16 minutes
+    // earlier, reporting deliveryType "". The probe called that the live build, a pass for a tab a deploy behind.
+    const stored = new Date(Date.now() - 16 * 60 * 1000).toUTCString();
+    const fromCacheStorage: ProbeEnv = {
+      ...env,
+      fetch: async (input, init) => {
+        const response = await fetch(input, init);
+        const headers = new Headers(response.headers);
+        headers.set("date", stored);
+        return new Response(init?.method === "HEAD" ? null : await response.text(), { status: response.status, headers });
+      },
+      timing: () => ({ workerStart: 2335.6, transferSize: 0, deliveryType: "" }),
+    };
+    const report = await analyze(tab("/released/", { buildId: build("42") }), fromCacheStorage);
+    assert.equal(find(report, "tab.build")?.title, "The service worker answered the probe's request for the live page from a cache");
+  });
 });
 
 describe("answeredByWorker", () => {
-  test("trusts Chrome's deliveryType, and 0 bytes elsewhere", () => {
-    // excalidraw.com: from Cache Storage. web.dev: the worker's own fetch hit the HTTP cache, despite the probe's no-store.
+  const response = (date: Date, age?: number) => ({ method: "GET", url: "https://example.com/", status: 200, headers: { date: date.toUTCString(), ...(age ? { age: String(age) } : {}) }, ms: 10 });
+  const now = Date.parse("2026-10-30T21:07:18Z");
+
+  test("trusts deliveryType cache-storage, then the response's Date, then 0 bytes", () => {
+    // excalidraw.com: from Cache Storage.
     assert.equal(answeredByWorker({ workerStart: 2231.3, transferSize: 0, deliveryType: "cache-storage" }), true);
-    assert.equal(answeredByWorker({ workerStart: 3849.2, transferSize: 0, deliveryType: "cache" }), true);
-    // Passed through to the network.
-    assert.equal(answeredByWorker({ workerStart: 12, transferSize: 0, deliveryType: "" }), false);
+    // sdc-lab-sw.pages.dev in Chrome: Cache Storage reported "", and a pass-through to the network "cache". Only Date tells.
+    assert.equal(answeredByWorker({ workerStart: 2335.6, transferSize: 0, deliveryType: "" }, response(new Date(now - 16 * 60 * 1000)), now), true);
+    assert.equal(answeredByWorker({ workerStart: 2645.7, transferSize: 0, deliveryType: "cache" }, response(new Date(now - 1000)), now), false);
+    // A CDN's copy is old by Date but fresh by Date + Age.
+    assert.equal(answeredByWorker({ workerStart: 12, transferSize: 0, deliveryType: "" }, response(new Date(now - 3600 * 1000), 3599), now), false);
+    // Without a Date, 0 bytes is the best sign there is.
     assert.equal(answeredByWorker({ workerStart: 12, transferSize: 0 }), true);
-    assert.equal(answeredByWorker({ workerStart: 0, transferSize: 0, deliveryType: "cache" }), false);
+    assert.equal(answeredByWorker({ workerStart: 12, transferSize: 1044 }), false);
+    assert.equal(answeredByWorker({ workerStart: 0, transferSize: 0, deliveryType: "cache-storage" }), false);
     assert.equal(answeredByWorker(undefined), false);
   });
 });
@@ -126,6 +151,36 @@ describe("files this tab loaded", () => {
       "/good/assets/forbidden.333ccc.js",
       "/good/assets/kept.222bbb.js",
     ]);
+  });
+
+  test("a file only the CDN's cache still has is removed", async () => {
+    // sdc-lab-good.pages.dev in Chrome: the tab's old script came back HIT with age 3405, and 404 past the copy.
+    const old = server.url("/pages-deploy/assets/index-DeZm4FUm.js");
+    const report = await analyze(tab("/pages-deploy/", { assets: [old] }), env);
+    const f = find(report, "tab.assets-removed")!;
+    assert.equal(f.severity, "fail");
+    assert.equal(f.title, "1 file this tab loaded no longer loads except from the CDN's cache");
+    assert.match(f.detail, /Files this tab hasn't loaded yet have no such copy/);
+    assert.doesNotMatch(f.detail, /index\.html/);
+    const statuses = f.evidence.flatMap((e) => (e.kind === "status" ? [[e.url.replace(/\?.*/, "?…"), e.status]] : []));
+    assert.deepEqual(statuses, [
+      [old, 200],
+      [`${old}?…`, 404],
+      [`${server.url("/pages-deploy/assets/index-ibBHxIU0.js")}?…`, 200],
+    ]);
+  });
+
+  test("a file the CDN has a copy of, and the deploy still has, passes", async () => {
+    const report = await analyze(tab("/pages-deploy/", { assets: [server.url("/pages-deploy/assets/kept-Ab12Cd34.js")] }), env);
+    assert.equal(find(report, "tab.assets-kept")?.severity, "pass");
+  });
+
+  test("a CDN copy on a host that doesn't ignore the query is only info", async () => {
+    const report = await analyze(tab("/strict-query/", { assets: [server.url("/strict-query/assets/old-Zx98Cv76.js")] }), env);
+    assert.equal(find(report, "tab.assets-removed"), undefined);
+    const f = find(report, "tab.assets-kept")!;
+    assert.equal(f.severity, "info");
+    assert.match(f.title, /only the CDN's cached copy could be checked/);
   });
 
   test("files that still load pass", async () => {

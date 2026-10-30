@@ -1,10 +1,12 @@
 import {
+  edgeCacheState,
   learn,
   mapLimit,
   ownedBy,
   plural,
   servesHtml,
   summarize,
+  uncachedUrl,
   VERSION,
   type BuildId,
   type Evidence,
@@ -46,6 +48,8 @@ interface Live {
 interface Asset {
   url: string;
   record?: RequestRecord;
+  /** When record came from a CDN's cache: the same file asked for with a unique query string, which the CDN has no copy for. */
+  pastCache?: RequestRecord;
   /** Why it couldn't be requested: blocked by CORS, a network error, a timeout. */
   error?: string;
 }
@@ -61,7 +65,7 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
     if (record.status >= 400 || !/text\/html|application\/xhtml\+xml/i.test(record.headers["content-type"] ?? "")) {
       live = { error: `${record.url} returned ${record.status} ${record.headers["content-type"] ?? ""}`.trim() };
     } else {
-      live = { record, ...env.readPage(body, record.url), fromWorker: answeredByWorker(env.timing?.(tab.url)) };
+      live = { record, ...env.readPage(body, record.url), fromWorker: answeredByWorker(env.timing?.(tab.url), record) };
     }
   } catch (error) {
     live = { error: describe(error) };
@@ -72,23 +76,40 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
   const liveAssets = new Set("record" in live ? live.assets : []);
   // Files the live page still references load by definition; the ones it dropped are the question.
   const changed = own.filter((a) => !liveAssets.has(a));
+  const headOrGet = async (url: string): Promise<RequestRecord> => {
+    const { record } = await request(url, "HEAD");
+    // Some servers answer HEAD with a 404 for a file GET serves, like Cloudflare Zaraz's /static/z/i.js.
+    return record.status >= 400 ? (await request(url, "GET")).record : record;
+  };
+  // The CDN can still have a copy of a file the deploy removed: on sdc-lab-good.pages.dev, the one this tab's
+  // own request put there. Files the tab hasn't loaded yet have no copy, so ask past it, next to a current file.
+  const nonce = Date.now().toString(36);
   const assets = await mapLimit(changed.slice(0, MAX_ASSET_REQUESTS), CONCURRENCY, async (url): Promise<Asset> => {
     try {
-      let { record } = await request(url, "HEAD");
-      // Some servers answer HEAD with a 404 for a file GET serves, like Cloudflare Zaraz's /static/z/i.js.
-      if (record.status >= 400) ({ record } = await request(url, "GET"));
-      return { url, record };
+      const record = await headOrGet(url);
+      if (record.status >= 400 || servesHtml(record) || !edgeCacheState(record).hit) return { url, record };
+      return { url, record, pastCache: await headOrGet(uncachedUrl(url, nonce)) };
     } catch (error) {
       return { url, error: describe(error) };
     }
   });
+  const current = [...liveAssets].find((a) => isOwn(a) && ASSET_PATH.test(new URL(a).pathname));
+  let control: RequestRecord | undefined;
+  if (current && assets.some((a) => a.pastCache)) {
+    try {
+      control = await headOrGet(uncachedUrl(current, nonce));
+    } catch {
+      // Without a control, the copies count as unconfirmed.
+    }
+  }
 
   const source = htmlSource(tab.navigation);
   const findings = [
     buildCheck(tab, live, source),
     ...sourceCheck(tab.navigation, source),
-    ...serviceWorkerChecks(tab, "record" in live ? live : undefined),
-    ...assetChecks(tab, own, changed, assets),
+    // A live page the worker answered is its own copy, not something to compare its cache with.
+    ...serviceWorkerChecks(tab, "record" in live && !live.fromWorker ? live : undefined),
+    ...assetChecks(tab, own, changed, assets, control),
   ];
 
   return {
@@ -103,15 +124,34 @@ export async function analyze(tab: TabSnapshot, env: ProbeEnv): Promise<TabRepor
   };
 }
 
+/** A stored copy older than this, by its own Date and Age, didn't come from the network just now. Allows for clock skew. */
+const STORED_AFTER_S = 120;
+
 /**
- * Whether the tab's service worker answered a request without the network. Chrome's deliveryType says so for
- * Cache Storage ("cache-storage") and for a worker whose own fetch hit the HTTP cache ("cache", seen on web.dev).
- * Elsewhere, 0 bytes transferred is the best sign there is.
+ * Whether the tab's service worker answered a request without the network. Chrome's deliveryType says
+ * "cache-storage" for some (excalidraw.com), but not reliably for a fetch() the worker handles: on
+ * sdc-lab-sw.pages.dev, Cache Storage gave "" and a pass-through to the network gave "cache", both with
+ * 0 bytes transferred. The response's Date does tell: a stored copy keeps the Date it was fetched with,
+ * plus any Age a CDN added. Without one, 0 bytes transferred is the best sign there is.
  */
-export function answeredByWorker(timing: { workerStart: number; transferSize: number; deliveryType?: string } | undefined): boolean {
+export function answeredByWorker(
+  timing: { workerStart: number; transferSize: number; deliveryType?: string } | undefined,
+  response?: RequestRecord,
+  now = Date.now(),
+): boolean {
   if (!timing || timing.workerStart <= 0) return false;
-  if (timing.deliveryType !== undefined) return timing.deliveryType === "cache" || timing.deliveryType === "cache-storage";
+  if (timing.deliveryType === "cache-storage") return true;
+  const stored = response ? storedFor(response, now) : undefined;
+  if (stored !== undefined) return stored > STORED_AFTER_S;
   return timing.transferSize === 0;
+}
+
+/** Seconds since the server made this response, from its Date and Age. Undefined without a Date. */
+function storedFor(record: RequestRecord, now: number): number | undefined {
+  const date = Date.parse(record.headers["date"] ?? "");
+  if (Number.isNaN(date)) return undefined;
+  const age = Number(record.headers["age"] ?? 0) || 0;
+  return (now - date) / 1000 - age;
 }
 
 /** Where this tab's HTML came from, as far as Navigation Timing says. */
@@ -387,25 +427,58 @@ function serviceWorkerChecks(tab: TabSnapshot, live: Live | undefined): Finding[
   return findings;
 }
 
-function assetChecks(tab: TabSnapshot, own: string[], changed: string[], assets: Asset[]): Finding[] {
+function assetChecks(tab: TabSnapshot, own: string[], changed: string[], assets: Asset[], control: RequestRecord | undefined): Finding[] {
   const base = { layer: "open-tab", source: "browser", learnMore: learn.openTab } as const;
   const findings: Finding[] = [];
+  const isGone = (r: RequestRecord): boolean => r.status >= 400 || servesHtml(r);
+  // An HTML error page is just how the 404 looks; only a successful HTML answer is a fallback rule.
+  const fallback = (r: RequestRecord): boolean => r.status < 400 && servesHtml(r);
   const answered = assets.flatMap((a) => (a.record ? [a.record] : []));
-  const gone = answered.filter((r) => r.status >= 400 || servesHtml(r));
+  const gone = answered.filter(isGone);
+  // Past the CDN's copy, a file only counts as gone if a current file still loads the same way.
+  const queryIgnored = control !== undefined && !isGone(control);
+  const cacheOnly = queryIgnored ? assets.filter((a) => a.pastCache && isGone(a.pastCache)) : [];
+  const unconfirmed = queryIgnored ? [] : assets.filter((a) => a.pastCache);
   const controlled = tab.serviceWorker !== "unsupported" && !!tab.serviceWorker.controller;
+  const status = (r: RequestRecord): Evidence => ({ kind: "status", url: r.url, status: r.status });
+  const cacheEvidence = (r: RequestRecord): Evidence[] => edgeCacheState(r).evidence.map((e): Evidence => ({ kind: "header", url: r.url, name: e.name, value: e.value }));
 
-  if (gone.length > 0) {
+  if (gone.length + cacheOnly.length > 0) {
+    const n = gone.length + cacheOnly.length;
     findings.push({
       ...base,
       check: "tab.assets-removed",
       severity: "fail",
-      title: `${plural(gone.length, "file")} this tab loaded no longer ${gone.length === 1 ? "loads" : "load"}`,
+      title: `${plural(n, "file")} this tab loaded no longer ${n === 1 ? "loads" : "load"}${cacheOnly.length === n ? " except from the CDN's cache" : ""}`,
       detail:
         "This tab still runs the code that loaded them, and that code loads the rest of its build the same way: a route or lazy component it hasn't opened yet. " +
         "Those files were most likely removed along with these, so the next one it asks for fails, and an unhandled failed import() usually means a blank screen." +
-        (gone.some(servesHtml) ? " An HTML page came back where a script or stylesheet should be: a fallback rule that serves index.html for missing files." : ""),
-      evidence: gone.map((r): Evidence => ({ kind: "status", url: r.url, status: r.status })),
+        (cacheOnly.length > 0
+          ? ` ${cacheOnly.length === n ? (n === 1 ? "It" : "They") : `${cacheOnly.length} of them`} only loaded from the CDN's cache, often the copy this tab's own request left there. ` +
+            `Asked for with a unique query string, which the CDN has no copy for, the deploy no longer has ${cacheOnly.length === 1 ? "it" : "them"}, while a current file loads that way. ` +
+            "Files this tab hasn't loaded yet have no such copy."
+          : "") +
+        ([...gone, ...cacheOnly.map((a) => a.pastCache!)].some(fallback) ? " An HTML page came back where a script or stylesheet should be: a fallback rule that serves index.html for missing files." : ""),
+      evidence: [
+        ...gone.map(status),
+        ...cacheOnly.flatMap((a) => [status(a.record!), ...cacheEvidence(a.record!), status(a.pastCache!)]),
+        ...(cacheOnly.length > 0 && control ? [status(control)] : []),
+      ],
       fix: "Keep old assets for a few days after a deploy instead of deleting them, and reload once when a dynamic import fails.",
+    });
+  } else if (unconfirmed.length > 0) {
+    findings.push({
+      ...base,
+      check: "tab.assets-kept",
+      severity: "info",
+      title: `${plural(unconfirmed.length, "file")} this tab loaded ${unconfirmed.length === 1 ? "loads" : "load"}, but only the CDN's cached copy could be checked`,
+      detail:
+        "The CDN's cache can hold a file the deploy removed, often the copy this tab's own request left there, while files the tab hasn't loaded yet have none. " +
+        (control
+          ? "Asking past it with a unique query string didn't work for a current file either, so this host doesn't ignore the query"
+          : "No current file was there to show whether this host ignores a query string") +
+        `, and there's no telling whether the deploy still has ${unconfirmed.length === 1 ? "it" : "them"}.`,
+      evidence: [...unconfirmed.flatMap((a) => [status(a.record!), ...cacheEvidence(a.record!)]), ...(control ? [status(control)] : [])],
     });
   } else if (answered.length > 0 || (own.length > 0 && changed.length === 0)) {
     findings.push({
