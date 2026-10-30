@@ -10,7 +10,7 @@ Section links point at the article: [Q2](https://ihabkhattab.com/blog/deployed-b
 2. Parse the HTML for `<script src>`, `<link rel="stylesheet">` and `<link rel="modulepreload">` on the site's own origins: the page's origin, subdomains of its host (`static.example.com` for `www.example.com`), and any `--asset-origin`. Cap at 20 assets (`--max-assets`); say so if there were more.
 3. `HEAD` each asset. Any error status is checked again with `GET`: some servers reject `HEAD` (405, 501), and some answer it with a 404 for a file `GET` serves (Cloudflare Zaraz).
 4. If the HTML had an `ETag` or `Last-Modified`, send the same `GET` again with `If-None-Match` / `If-Modified-Since`.
-5. With `--baseline <report.json>`, `HEAD` every asset URL from the previous report, with the same `GET` check on errors.
+5. With `--baseline <report.json>`, `HEAD` every asset URL from the previous report, with the same `GET` check on errors. One that loads from a CDN's cache (a cache-status `HIT`, or `Age` > 0) is requested again with a unique `?stale-deploy-check=` query, which the CDN has no copy for, and so is one current asset, to show the host ignores the query.
 
 Nothing else: no crawling, no guessing paths like `/sw.js`.
 
@@ -79,8 +79,9 @@ Every CDN finding says which edge answered (from `cf-ray`, `x-served-by`, etc. w
 
 | Check id | Severity | Condition | Learn |
 | --- | --- | --- | --- |
-| `assets.previous-removed` | fail | With `--baseline`: an asset URL from the previous report no longer loads: any 4xx or 5xx (S3 behind CloudFront answers 403 for a missing file), or an HTML page where a script or stylesheet should be (a CDN error rule serving `index.html`). Tabs opened before the deploy will fail to load it. | Q6 |
-| `assets.previous-kept` | pass | With `--baseline`: every previous asset still loads. | Q6 |
+| `assets.previous-removed` | fail | With `--baseline`: an asset URL from the previous report no longer loads: any 4xx or 5xx (S3 behind CloudFront answers 403 for a missing file), or an HTML page where a script or stylesheet should be (a CDN error rule serving `index.html`). Also when it loads only from the CDN's cache: past the cache it's an error while a current asset loads, so other edges, or this one after the copy goes, return the error. The copy is often one the previous run's own request put there (seen on Cloudflare Pages). Tabs opened before the deploy will fail to load it. | Q6 |
+| `assets.previous-kept` | pass | With `--baseline`: every previous asset still loads, past the CDN's cache too. | Q6 |
+| `assets.previous-kept` | info | Previous assets load, but only from the CDN's cache, and a current asset fails past it too, so the host doesn't ignore the query and the deploy itself couldn't be checked. | Q6 |
 
 ### Proving it
 

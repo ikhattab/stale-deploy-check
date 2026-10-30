@@ -27,7 +27,16 @@ export interface Context {
   /** Assets on origins that aren't the site's own, and own assets past the --max-assets limit. */
   notChecked: { otherOrigins: string[]; overCap: string[]; limit: number };
   /** With --baseline: requests for the previous report's assets that this HTML no longer references. */
-  baseline?: { checked: RequestRecord[] };
+  baseline?: {
+    checked: RequestRecord[];
+    /**
+     * Old files that loaded from a CDN's cache, asked for again with a unique query string so the CDN
+     * has no copy and the request reaches the deploy. The copy may be one an earlier run put there.
+     */
+    pastCache: { cached: RequestRecord; fresh: RequestRecord }[];
+    /** The same request for a file this deploy serves, to show the host ignores the query. Only when pastCache isn't empty. */
+    control?: RequestRecord;
+  };
   /** A request for a made-up file next to a hashed asset, to see what a browser that asks too early gets. */
   missing?: RequestRecord;
   thresholds: Thresholds;

@@ -1,9 +1,10 @@
 import { assetChecks } from "./checks/assets.ts";
 import { cdnChecks } from "./checks/cdn.ts";
-import type { AssetResult, Context, Thresholds } from "./checks/context.ts";
+import { servesHtml, type AssetResult, type Context, type Thresholds } from "./checks/context.ts";
 import { htmlChecks } from "./checks/html.ts";
 import { baselineChecks, pageChecks } from "./checks/page.ts";
 import { parseCacheControl } from "./cache-control.ts";
+import { edgeCacheState } from "./cdn.ts";
 import { DAY } from "./duration.ts";
 import { parsePage } from "./html.ts";
 import { CheckError, Recorder, type FetchLike } from "./http.ts";
@@ -78,7 +79,15 @@ export async function check(target: string, options: CheckOptions = {}): Promise
   if (options.baseline) {
     const current = new Set(own);
     const previous = options.baseline.assets.filter((a) => !current.has(a)).slice(0, MAX_BASELINE_REQUESTS);
-    baseline = { checked: await mapLimit(previous, CONCURRENCY, (a) => headOrGet(recorder, a)) };
+    const checked = await mapLimit(previous, CONCURRENCY, (a) => headOrGet(recorder, a));
+    // A CDN can keep serving a file the deploy removed, often a copy the previous run's own request put
+    // there. A unique query string misses that copy; static hosts ignore it when looking up the file.
+    const cached = checked.filter((r) => r.status < 400 && !servesHtml(r) && edgeCacheState(r).hit);
+    const live = assets.find((a) => a.record.status < 400 && !servesHtml(a.record));
+    const nonce = Date.now().toString(36);
+    const pastCache = await mapLimit(cached, CONCURRENCY, async (r) => ({ cached: r, fresh: await headOrGet(recorder, uncachedUrl(r.url, nonce)) }));
+    const control = pastCache.length > 0 && live ? await headOrGet(recorder, uncachedUrl(live.url, nonce)) : undefined;
+    baseline = { checked, pastCache, ...(control ? { control } : {}) };
   }
 
   const ctx: Context = {
@@ -158,6 +167,13 @@ async function revalidate(recorder: Recorder, doc: RequestRecord): Promise<Reque
   if (Object.keys(conditional).length === 0) return undefined;
   const result = await recorder.request(doc.url, { method: "GET", headers: { accept: "text/html,application/xhtml+xml" }, conditional });
   return result.final;
+}
+
+/** The URL with a query parameter no CDN has a copy for. */
+function uncachedUrl(url: string, nonce: string): string {
+  const u = new URL(url);
+  u.searchParams.set("stale-deploy-check", nonce);
+  return u.href;
 }
 
 async function headOrGet(recorder: Recorder, url: string): Promise<RequestRecord> {
