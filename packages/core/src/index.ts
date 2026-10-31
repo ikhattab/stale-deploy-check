@@ -2,6 +2,7 @@ export { check, summarize, ownedBy, mapLimit, uncachedUrl, DEFAULT_THRESHOLDS, V
 export { edgeCacheState } from "./cdn.ts";
 export { parsePage, buildIdFromMeta, type BuildId, type ParsedPage } from "./html.ts";
 export { servesHtml, plural } from "./checks/context.ts";
+export { missingFileLifetime } from "./checks/assets.ts";
 export { fixPrompt, type PromptInput } from "./prompt.ts";
 export { clean, shellQuote } from "./text.ts";
 export { CheckError, type CheckErrorCode, type FetchLike } from "./http.ts";

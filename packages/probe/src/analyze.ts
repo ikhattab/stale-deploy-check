@@ -1,7 +1,10 @@
 import {
+  DEFAULT_THRESHOLDS,
   edgeCacheState,
+  formatDuration,
   learn,
   mapLimit,
+  missingFileLifetime,
   ownedBy,
   plural,
   servesHtml,
@@ -528,6 +531,38 @@ function assetChecks(tab: TabSnapshot, own: string[], changed: string[], assets:
             (controlled ? " The service worker may have answered these from its cache, though, so the server may not have them." : "")
           : "No file names changed since this tab loaded, so there was nothing to check.",
       evidence: answered.map((r): Evidence => ({ kind: "status", url: r.url, status: r.status })),
+    });
+  }
+
+  // The probe's own requests skip the HTTP cache, but this tab's next import() of a removed file doesn't:
+  // the browser keeps whatever comes back under the file's name, for as long as its headers say.
+  const kept = [...gone, ...cacheOnly.map((a) => a.pastCache!)]
+    .map((record) => ({ record, ...missingFileLifetime(record, DEFAULT_THRESHOLDS) }))
+    .filter((m) => m.tooLong);
+  if (kept.length > 0) {
+    const longest = kept.reduce((a, b) => (b.lifetime > a.lifetime ? b : a));
+    const duration = `${longest.guessed ? "about " : ""}${formatDuration(longest.lifetime)}`;
+    const what = fallback(longest.record) ? "HTML page served for a missing file" : `${longest.record.status} for a missing file`;
+    findings.push({
+      layer: "http-cache",
+      source: "browser",
+      learnMore: learn.headers,
+      check: "tab.missing-cached",
+      severity: "warn",
+      title: `The ${what} is cached for ${duration}`,
+      detail:
+        "When this tab asks for a file the deploy removed, as its next lazy route or component will, the browser keeps what comes back under that file's name. " +
+        `So this browser can't load that file for ${duration}, even if a rollback brings it back.` +
+        (/\bimmutable\b/i.test(longest.record.headers["cache-control"] ?? "") ? " immutable also stops a reload from asking again." : "") +
+        (longest.guessed ? " There's no explicit lifetime, so that's the browser's guess from Last-Modified." : "") +
+        (longest.shared > longest.browser ? " The CDN keeps it that long, so every user who asks gets it." : ""),
+      evidence: [
+        ...kept.flatMap((m): Evidence[] => [status(m.record), { kind: "header", url: m.record.url, name: "cache-control", value: m.record.headers["cache-control"] ?? null }]),
+        computed("cached for", duration),
+      ],
+      fix:
+        "Send Cache-Control: no-store on responses for missing files. A long-lifetime rule for hashed files usually matches by path, so it covers misses too; " +
+        "set the header where the error is sent (the server, or an edge function in front of the static files).",
     });
   }
 
