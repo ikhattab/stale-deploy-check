@@ -2,19 +2,42 @@ import type { RequestRecord } from "./types.ts";
 
 export type Directives = Map<string, string | true>;
 
-const DIRECTIVE = /\s*([^=,\s]+)(?:\s*=\s*("(?:[^"\\]|\\.)*"|[^,]*))?\s*(?:,|$)/g;
-
 /** Parses a Cache-Control value. Names are lowercased, quoted values unquoted. */
 export function parseCacheControl(value: string | null | undefined): Directives {
   const directives: Directives = new Map();
   if (!value) return directives;
-  for (const match of value.matchAll(DIRECTIVE)) {
-    const name = match[1]!.toLowerCase();
-    const raw = match[2]?.trim();
+  for (const part of splitDirectives(value)) {
+    const eq = part.indexOf("=");
+    const name = (eq < 0 ? part : part.slice(0, eq)).trim().toLowerCase();
+    if (!name || /[\s"]/.test(name)) continue;
+    const raw = eq < 0 ? undefined : part.slice(eq + 1).trim();
     const parsed = raw === undefined ? true : raw.startsWith('"') ? raw.slice(1, -1).replace(/\\(.)/g, "$1") : raw;
     if (!directives.has(name)) directives.set(name, parsed);
   }
   return directives;
+}
+
+/**
+ * Splits on commas outside quoted values. A loop rather than a regex, so a server's header can't make
+ * parsing take long: the regex this replaced backtracked on long runs of one character (CodeQL).
+ */
+function splitDirectives(value: string): string[] {
+  const parts: string[] = [];
+  let start = 0;
+  let quoted = false;
+  for (let i = 0; i < value.length; i++) {
+    const c = value[i];
+    if (quoted && c === "\\") i++;
+    else if (c === '"') quoted = !quoted;
+    else if (c === "," && !quoted) {
+      parts.push(value.slice(start, i));
+      start = i + 1;
+    }
+  }
+  // A quote that never closes doesn't swallow the directives after it.
+  if (quoted) return value.split(",");
+  parts.push(value.slice(start));
+  return parts;
 }
 
 /** A delta-seconds directive like max-age, or undefined if absent or malformed. */

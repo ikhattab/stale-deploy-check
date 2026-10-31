@@ -22,6 +22,19 @@ describe("parseCacheControl", () => {
     assert.equal(parseCacheControl(undefined).size, 0);
     assert.equal(parseCacheControl("").size, 0);
   });
+
+  test("escaped quotes, stray commas and a quote that never closes", () => {
+    assert.deepEqual([...parseCacheControl('no-cache="a\\"b,c", , s-maxage = 10,')], [["no-cache", 'a"b,c'], ["s-maxage", "10"]]);
+    assert.equal(parseCacheControl('x="open, max-age=3').get("max-age"), "3");
+  });
+
+  test("a hostile header parses quickly", () => {
+    // CodeQL: the regex this used before backtracked on long runs of one character.
+    const started = Date.now();
+    parseCacheControl(`${"!".repeat(50_000)} x`);
+    parseCacheControl(`!${" ".repeat(50_000)}x`);
+    assert.ok(Date.now() - started < 500);
+  });
 });
 
 describe("browserFreshness", () => {
