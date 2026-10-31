@@ -191,6 +191,36 @@ describe("files this tab loaded", () => {
     );
   });
 
+  test("a removed file's HTML fallback kept for a year warns", async () => {
+    // sdc-lab-workers: a missing chunk got the app's HTML with the year-long /assets/* rule, and after the
+    // tab's import() failed, Chrome held that HTML under the chunk's name.
+    const report = await analyze(tab("/released/", { buildId: build("41"), assets: [server.url("/good/assets/fallback-year.555eee.js")] }), env);
+    assert.equal(find(report, "tab.assets-removed")?.severity, "fail");
+    const f = find(report, "tab.missing-cached")!;
+    assert.equal(f.severity, "warn");
+    assert.equal(f.layer, "http-cache");
+    assert.equal(f.title, "The HTML page served for a missing file is cached for 365 days");
+    assert.match(f.detail, /immutable also stops a reload from asking again/);
+    assert.deepEqual(
+      f.evidence.map((e) => (e.kind === "header" ? `${e.name}: ${e.value}` : e.kind === "computed" ? `${e.label}: ${e.value}` : e.kind)),
+      ["status", "cache-control: public, max-age=31536000, immutable", "cached for: 365 days"],
+    );
+  });
+
+  test("past the CDN's copy, the fallback's lifetime counts", async () => {
+    // sdc-lab-immutable-404: the edge still had the old script, and past it the HTML had the year-long rule.
+    const old = server.url("/pages-deploy/assets/index-0H7YGZwm.js");
+    const f = find(await analyze(tab("/pages-deploy/", { assets: [old] }), env), "tab.missing-cached")!;
+    assert.equal(f.severity, "warn");
+    assert.ok(f.evidence.some((e) => e.kind === "status" && e.url.startsWith(`${old}?`)));
+  });
+
+  test("a fallback that isn't kept doesn't warn", async () => {
+    const report = await analyze(tab("/pages-deploy/", { assets: [server.url("/pages-deploy/assets/index-_wtOz3oV.js")] }), env);
+    assert.equal(find(report, "tab.assets-removed")?.severity, "fail");
+    assert.equal(find(report, "tab.missing-cached"), undefined);
+  });
+
   test("a file the CDN has a copy of, and the deploy still has, passes", async () => {
     const report = await analyze(tab("/pages-deploy/", { assets: [server.url("/pages-deploy/assets/kept-Ab12Cd34.js")] }), env);
     assert.equal(find(report, "tab.assets-kept")?.severity, "pass");

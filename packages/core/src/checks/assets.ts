@@ -3,8 +3,8 @@ import { sharedLifetime } from "../cdn.ts";
 import { DAY, formatDuration } from "../duration.ts";
 import { learn } from "../links.ts";
 import { hasContentHash } from "../naming.ts";
-import type { Evidence, Finding } from "../types.ts";
-import { computed, header, plural, servesHtml, status, type AssetResult, type Context } from "./context.ts";
+import type { Evidence, Finding, RequestRecord } from "../types.ts";
+import { computed, header, plural, servesHtml, status, type AssetResult, type Context, type Thresholds } from "./context.ts";
 
 export function assetChecks(ctx: Context): Finding[] {
   const findings: Finding[] = [];
@@ -135,13 +135,9 @@ export function assetChecks(ctx: Context): Finding[] {
   // A 200 that isn't an HTML fallback means the server answers any path, so there's no miss to judge.
   if (missing && (missing.status >= 400 || servesHtml(missing))) {
     const cc = parseCacheControl(missing.headers["cache-control"]);
-    const freshness = browserFreshness(missing);
-    const browser = lifetimeOf(freshness);
-    const shared = sharedLifetime(missing)?.seconds ?? 0;
-    const lifetime = Math.max(browser, shared);
+    const { browser, shared, lifetime, guessed, tooLong } = missingFileLifetime(missing, ctx.thresholds);
     const what = missing.status >= 400 ? `${missing.status} for a missing hashed file` : `HTML page served for a missing ${extensionOf(missing.url)} file`;
-    if (browser > ctx.thresholds.htmlMaxAge || shared > ctx.thresholds.edgeMaxAge) {
-      const guessed = freshness.kind === "heuristic" && browser >= shared;
+    if (tooLong) {
       findings.push({
         ...base,
         check: "assets.missing-cached",
@@ -226,6 +222,26 @@ export function assetChecks(ctx: Context): Finding[] {
 /** Seconds a browser may reuse the response without asking. */
 function lifetimeOf(freshness: BrowserFreshness): number {
   return freshness.kind === "explicit" || freshness.kind === "heuristic" ? freshness.seconds : 0;
+}
+
+/**
+ * How long browsers and a CDN keep the response for a missing file, in seconds. tooLong is past the
+ * HTML thresholds, since the response is an error or an HTML page; guessed is a browser heuristic.
+ */
+export function missingFileLifetime(
+  record: RequestRecord,
+  thresholds: Thresholds,
+): { browser: number; shared: number; lifetime: number; guessed: boolean; tooLong: boolean } {
+  const freshness = browserFreshness(record);
+  const browser = lifetimeOf(freshness);
+  const shared = sharedLifetime(record)?.seconds ?? 0;
+  return {
+    browser,
+    shared,
+    lifetime: Math.max(browser, shared),
+    guessed: freshness.kind === "heuristic" && browser >= shared,
+    tooLong: browser > thresholds.htmlMaxAge || shared > thresholds.edgeMaxAge,
+  };
 }
 
 /** Origins and how many files each serves, most first. */
