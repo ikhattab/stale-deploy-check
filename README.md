@@ -8,7 +8,7 @@ npx stale-deploy-check https://example.com/
 
 It's built on the article [We Deployed an Hour Ago. Why Do Users Still See the Old Version?](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/), and every finding links to the section that explains it, so you learn why as well as what to change.
 
-> **Work in progress.** Expect rough edges and missed cases, and output that may change between versions. If it gets your site wrong, [open an issue](https://github.com/ikhattab/stale-deploy-check/issues) with the URL and what you expected.
+> **Archived. No longer maintained.** The CLI still runs, but it won't get fixes or updates, and the browser extension has been removed from the Chrome Web Store. For the explanation behind every check, read [the article](https://ihabkhattab.com/blog/deployed-but-users-see-the-old-version/).
 
 ## Where an old version hides
 
@@ -146,7 +146,7 @@ What it won't do: edit your code unless you ask, install packages or build in yo
 
 ## Browser extension
 
-Install [stale-deploy-check from the Chrome Web Store](https://chromewebstore.google.com/detail/stale-deploy-check/bcibhjoeiphifeicebippfihloijnanm). When a tab still shows the old version after a deploy, click its toolbar button on that tab to find out why. It looks at the tab from inside the browser:
+The extension is no longer on the Chrome Web Store. To try it, run `npm run build` and load `packages/extension/dist/chrome` unpacked. When a tab still shows the old version after a deploy, click its toolbar button on that tab to find out why. It looks at the tab from inside the browser:
 
 - **Its build**: the tab's build id (or, without one, the files it loaded) against what the server sends now.
 - **Where its HTML came from**: the network, the browser cache, a 304, or a service worker.
