@@ -26,6 +26,9 @@ jobs:
   # Runs this repo's action.yml the way users do, against the test server and with the working tree's CLI.
   action:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # gh cache list
     env:
       CLI: node packages/cli/dist/stale-deploy-check.js
     steps:
@@ -54,6 +57,25 @@ jobs:
       # So the next step can only get the first report back from the cache.
       - name: Clear the workspace copy of the reports
         run: rm -rf .stale-deploy-check
+
+      # A cache entry can take a moment to be found after it's saved, so the next step sometimes missed it
+      # when it ran straight after. The key prefix is built the same way as in action.yml.
+      - name: Wait for the first report to show up in the cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          hash=$(printf %s "$BASE/good/" | sha256sum | cut -c1-16)
+          prefix="stale-deploy-check-$hash-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-"
+          for _ in $(seq 1 30); do
+            if [ -n "$(gh cache list --key "$prefix" --json key --jq '.[].key')" ]; then
+              sleep 5 # The list can see an entry slightly before a restore can.
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::No cache entry starting with $prefix after 60s."
+          exit 1
 
       - name: The same site again, compared with the first report from the cache
         id: again
